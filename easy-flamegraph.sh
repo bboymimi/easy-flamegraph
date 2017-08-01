@@ -1,7 +1,7 @@
 #!/bin/bash
 
 FPATH="$HOME/os/FlameGraph/"
-FPERF="$HOME/perf-output/"
+FPERF="`dirname $0`/perf-output/"
 PERF_SCRIPT_CMD="perf script"
 PERF_REPORT=""
 GREP_STRINGS=""
