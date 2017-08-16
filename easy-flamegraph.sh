@@ -81,7 +81,11 @@ fi
 
 [[ $TAR == "1" ]] && tar zcvf perf-data.tar.gz $FPERF &&
 echo "# The perf-related file: \"${FPERF}\" has been tared."
-
 echo "###########"
 echo "# The perf interactive .svg graph \"${PSVG}\" has been generated."
+echo ""
+echo "# The FlameGraph can be viewed by:"
+echo "# $ google-chrome-stable ${PSVG}"
+echo "# or"
+echo "# $ firefox ${PSVG}"
 echo "###########"
