@@ -35,9 +35,15 @@ if [ ! $PERF_REPORT ]; then
 fi
 
 if [ ! -e $FPATH ]; then
-    echo "please install the FlameGraph by the following instructions:"
-    echo "cd ~/os; git clone https://github.com/brendangregg/FlameGraph"
-    exit -1
+    echo "Install the FlameGraph by the following instructions:"
+
+    echo "mkdir -p $HOME/os/"
+    mkdir -p $HOME/os/
+
+    echo "git clone https://github.com/brendangregg/FlameGraph"
+    git clone https://github.com/brendangregg/FlameGraph $HOME/os/FlameGraph
+
+    echo "Installation Success!"
 fi
 
 PSCRIPT="${FPERF}${DATE}.`basename ${PERF_REPORT}`.script"
