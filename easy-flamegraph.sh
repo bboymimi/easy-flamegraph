@@ -25,14 +25,22 @@ while getopts "g:i:k:th" opt; do
     esac
 done
 
+# check if the command line has assign the perf.data file. e.g. '-i xxx.perf.data'
 if [ ! $PERF_REPORT ]; then
-    echo "Please use -i to append the perf.data"
-    echo "usage: $0 -g <grep string to make specific flamegraph> -i <perf file> -k <kernel version #>"
-    echo "	i - perf report file"
-    echo "	k - kernel version - specific kernel version number"
-    echo "	g - grep strings - to grep specific strings e.g., kworker, to make flamegraph"
-    exit -1
+    # if command didn't assign the perf data, go ahead to check the current folder
+    if [ -e `pwd`/perf.data ]; then
+        PERF_REPORT="`pwd`/perf.data"
+    else
+        echo "Please use -i to append the perf.data"
+        echo "usage: $0 -g <grep string to make specific flamegraph> -i <perf file> -k <kernel version #>"
+        echo "	i - perf report file"
+        echo "	k - kernel version - specific kernel version number"
+        echo "	g - grep strings - to grep specific strings e.g., kworker, to make flamegraph"
+        exit -1
+    fi
 fi
+
+echo "Use the $PERF_REPORT as the source of the FlameGraph."
 
 if [ ! -e $FPATH ]; then
     echo "Install the FlameGraph by the following instructions:"
