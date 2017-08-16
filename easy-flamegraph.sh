@@ -42,6 +42,14 @@ fi
 
 echo "Use the $PERF_REPORT as the source of the FlameGraph."
 
+# check if the $PERF_REPORT is readable
+if [ ! -r $PERF_REPORT ]; then
+    echo "Permission denied: $PERF_REPORT cannot be read."
+    echo "Try: \"sudo chmod a+r $PERF_REPORT\""
+    exit -1
+fi
+
+# Try to clone the FlameGraph if it doesn't exist.
 if [ ! -e $FPATH ]; then
     echo "Install the FlameGraph by the following instructions:"
 
