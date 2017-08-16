@@ -6,6 +6,7 @@ PERF_SCRIPT_CMD="perf script"
 PERF_REPORT=""
 GREP_STRINGS=""
 KERNEL_VERSION=""
+DATE=$(date +%Y-%m-%d_%H:%M:%S)
 
 while getopts "g:i:k:th" opt; do
     case $opt in
@@ -39,9 +40,9 @@ if [ ! -e $FPATH ]; then
     exit -1
 fi
 
-PSCRIPT="${FPERF}`basename ${PERF_REPORT}`.perf"
-PFOLDED="${PSCRIPT}.folded"
-PSVG="${PFOLDED}.svg"
+PSCRIPT="${FPERF}${DATE}.`basename ${PERF_REPORT}`.script"
+PFOLDED="${FPERF}${DATE}.`basename ${PERF_REPORT}`.folded"
+PSVG="${FPERF}${DATE}.`basename ${PERF_REPORT}`.svg"
 
 # mkdir the folder to store the perf report data
 mkdir -p ${FPERF}
