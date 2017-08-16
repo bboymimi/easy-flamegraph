@@ -48,7 +48,7 @@ if [ ! -e $FPATH ]; then
     echo "mkdir -p $HOME/os/"
     mkdir -p $HOME/os/
 
-    echo "git clone https://github.com/brendangregg/FlameGraph"
+    echo "git clone https://github.com/brendangregg/FlameGraph $HOME/os/FlameGraph"
     git clone https://github.com/brendangregg/FlameGraph $HOME/os/FlameGraph
 
     echo "Installation Success!"
