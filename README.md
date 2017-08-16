@@ -3,7 +3,7 @@
 Utilities used for performance profiling.
 
 1. easy-flamegraph.sh
-=================
+=====================
 This is the wrapper used for the FlameGraph generation. The FlameGraph is invented by Brendan Greg. For more information, please refer to: https://github.com/brendangregg/FlameGraph
 
 At first, you need to profile the system and get the perf.data:
