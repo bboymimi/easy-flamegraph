@@ -91,8 +91,13 @@ else
     egrep $GREP_STRINGS ${PFOLDED} | ${FPATH}flamegraph.pl > ${PSVG}
 fi
 
-[[ $TAR == "1" ]] && tar zcvf perf-data.tar.gz $FPERF &&
-echo "# The perf-related file: \"${FPERF}\" has been tared."
+if [[ $TAR == "1" ]]; then
+    tar zcvf ${PERF_REPORT}.tar.gz ${PERF_REPORT}*
+    echo "# The perf-related file: \"${PERF_REPORT}\" has been tared."
+    rm $(ls ${PERF_REPORT}* | grep -v tar.gz)
+    echo "# Delete the related perf report files:" ${PERF_REPORT}*
+fi
+
 echo "###########"
 echo "# The perf interactive .svg graph \"${PSVG}\" has been generated."
 echo ""
