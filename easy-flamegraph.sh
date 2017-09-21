@@ -68,6 +68,7 @@ fi
 PSCRIPT="${FPERF}${DATE}.`basename ${PERF_REPORT}`.script"
 PFOLDED="${FPERF}${DATE}.`basename ${PERF_REPORT}`.folded"
 PSVG="${FPERF}${DATE}.`basename ${PERF_REPORT}`.svg"
+PFOLDED_SUM="${FPERF}stack_sum"
 
 # mkdir the folder to store the perf report data
 mkdir -p ${FPERF}
@@ -82,6 +83,9 @@ ${PERF_SCRIPT_CMD} > ${PSCRIPT}
 
 # extract the call stack for the flamegraph.pl to generate the svg interactive graph
 ${FPATH}stackcollapse-perf.pl ${PSCRIPT} > ${PFOLDED}
+
+# cat all the callgraph to make the summary
+cat ${PFOLDED} >> ${PFOLDED_SUM}
 
 if [[ $GREP_STRINGS == "" ]]; then
     cat ${PFOLDED} | ${FPATH}flamegraph.pl > ${PSVG}
