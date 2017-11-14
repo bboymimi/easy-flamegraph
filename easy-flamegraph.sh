@@ -6,6 +6,7 @@ PERF_SCRIPT_CMD="perf script"
 PERF_REPORT=""
 GREP_STRINGS=""
 KERNEL_VERSION=""
+SYMFS=""
 DATE=$(date +%Y-%m-%d_%H:%M:%S)
 
 while getopts "g:i:k:th" opt; do
@@ -13,12 +14,14 @@ while getopts "g:i:k:th" opt; do
         g) GREP_STRINGS=$OPTARG ;;
         i) PERF_REPORT=$OPTARG ;;
         k) KERNEL_VERSION=$OPTARG ;;
+        s) SYMFS=$OPTARG ;;
         t) TAR=1 ;;
         h|*)
             echo "usage: $0 -g <grep string to make specific flamegraph> -i <perf file> -k <kernel version #>"
             echo "	i - perf report file"
             echo "	k - kernel version - specific kernel version number"
             echo "	g - grep strings - to grep specific strings e.g., kworker, to make flamegraph"
+            echo "	s - symfs - to assign the directory to search for the debug symbol of kernel modules"
             echo "	t - tar the $FPERF"
             exit 0
             ;;
@@ -72,6 +75,7 @@ mkdir -p ${FPERF}
 # perf script -i ./perf-110417_201609 -k ~/ddebs/ddebs-4.4.0-53.74/usr/lib/debug/boot/vmlinux-4.4.0-53-generic > perf-110417_201609.perf
 [[ $PERF_REPORT != "" ]] && PERF_SCRIPT_CMD="${PERF_SCRIPT_CMD} -i $PERF_REPORT"
 [[ $KERNEL_VERSION != "" ]] && PERF_SCRIPT_CMD="${PERF_SCRIPT_CMD} -k $KERNEL_VERSION"
+[[ $SYMFS != "" ]] && PERF_SCRIPT_CMD="${PERF_SCRIPT_CMD} --symfs $SYMFS"
 
 # generate the perf script file for the stackcollapse to extract the call stack
 ${PERF_SCRIPT_CMD} > ${PSCRIPT}
