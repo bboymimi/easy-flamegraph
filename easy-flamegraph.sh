@@ -9,7 +9,7 @@ KERNEL_VERSION=""
 SYMFS=""
 DATE=$(date +%Y-%m-%d_%H:%M:%S)
 
-while getopts "g:i:k:th" opt; do
+while getopts "g:i:k:s:th" opt; do
     case $opt in
         g) GREP_STRINGS=$OPTARG ;;
         i) PERF_REPORT=$OPTARG ;;
