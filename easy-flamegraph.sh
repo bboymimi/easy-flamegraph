@@ -96,8 +96,9 @@ else
 fi
 
 if [[ $TAR == "1" ]]; then
-    tar zcvf ${PERF_REPORT}.tar.gz ${PERF_REPORT}*
+    tar zcvf ${PERF_REPORT}.tar.gz ${PERF_REPORT}* ${FPERF}
     echo "# The perf-related file: \"${PERF_REPORT}\" has been tared."
+    echo "# The perf-related folder: \"${FPERF}\" has been tared."
     rm $(ls ${PERF_REPORT}* | grep -v tar.gz)
     echo "# Delete the related perf report files:" ${PERF_REPORT}*
 fi
