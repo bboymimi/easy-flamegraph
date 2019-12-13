@@ -1,6 +1,7 @@
 #!/bin/bash
 
 FPATH="$HOME/os/FlameGraph/"
+DROP_PERF_DATA=false
 FPERF="`dirname $0`/perf-output/"
 PERF_SCRIPT_CMD="perf script"
 PERF_REPORT=""
@@ -10,8 +11,19 @@ SYMFS=""
 TAR=false
 DATE=$(date +%Y-%m-%d_%H:%M:%S)
 
-while getopts "g:i:k:s:th" opt; do
+clean_exit() {
+
+	if $DROP_PERF_DATA; then
+	rm ${PFOLDED}
+		rm ${PSCRIPT}
+	fi
+
+	exit 0
+}
+
+while getopts "dg:i:k:th" opt; do
     case $opt in
+        d) DROP_PERF_DATA=true;;
         g) GREP_STRINGS=$OPTARG ;;
         i) PERF_REPORT=$OPTARG ;;
         k) KERNEL_VERSION=$OPTARG ;;
@@ -19,6 +31,7 @@ while getopts "g:i:k:s:th" opt; do
         t) TAR=true ;;
         h|*)
             echo "usage: $0 -g <grep string to make specific flamegraph> -i <perf file> -k <kernel version #>"
+            echo "	d - drop the perf related data(include perf.data!!) and keep the .svg flamegraph file to save space"
             echo "	i - perf report file"
             echo "	k - kernel version - specific kernel version number"
             echo "	g - grep strings - to grep specific strings e.g., kworker, to make flamegraph"
@@ -91,7 +104,7 @@ mkdir -p ${FPERF}
 # generate the perf script file for the stackcollapse to extract the call stack
 ${PERF_SCRIPT_CMD} > ${PSCRIPT}
 
-[ ! -s ${PSCRIPT} ] && echo "No perf data captured!"; rm ${PSCRIPT} && exit 0
+[ ! -s ${PSCRIPT} ] && echo "No perf data captured!"  && clean_exit
 
 # extract the call stack for the flamegraph.pl to generate the svg interactive graph
 ${FPATH}stackcollapse-perf.pl ${PSCRIPT} > ${PFOLDED}
@@ -123,3 +136,5 @@ echo "# $ google-chrome-stable ${PSVG}"
 echo "# or"
 echo "# $ firefox ${PSVG}"
 echo "###########"
+
+clean_exit
