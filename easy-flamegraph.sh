@@ -7,6 +7,7 @@ PERF_REPORT=""
 GREP_STRINGS=""
 KERNEL_VERSION=""
 SYMFS=""
+TAR=false
 DATE=$(date +%Y-%m-%d_%H:%M:%S)
 
 while getopts "g:i:k:s:th" opt; do
@@ -15,7 +16,7 @@ while getopts "g:i:k:s:th" opt; do
         i) PERF_REPORT=$OPTARG ;;
         k) KERNEL_VERSION=$OPTARG ;;
         s) SYMFS=$OPTARG ;;
-        t) TAR=1 ;;
+        t) TAR=true ;;
         h|*)
             echo "usage: $0 -g <grep string to make specific flamegraph> -i <perf file> -k <kernel version #>"
             echo "	i - perf report file"
@@ -95,7 +96,7 @@ else
     egrep $GREP_STRINGS ${PFOLDED} | ${FPATH}flamegraph.pl > ${PSVG}
 fi
 
-if [[ $TAR == "1" ]]; then
+if $TAR; then
     tar zcvf ${PERF_REPORT}.tar.gz ${PERF_REPORT}* ${FPERF}
     echo "# The perf-related file: \"${PERF_REPORT}\" has been tared."
     echo "# The perf-related folder: \"${FPERF}\" has been tared."
