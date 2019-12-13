@@ -91,6 +91,8 @@ mkdir -p ${FPERF}
 # generate the perf script file for the stackcollapse to extract the call stack
 ${PERF_SCRIPT_CMD} > ${PSCRIPT}
 
+[ ! -s ${PSCRIPT} ] && echo "No perf data captured!"; rm ${PSCRIPT} && exit 0
+
 # extract the call stack for the flamegraph.pl to generate the svg interactive graph
 ${FPATH}stackcollapse-perf.pl ${PSCRIPT} > ${PFOLDED}
 
