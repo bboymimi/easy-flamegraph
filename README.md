@@ -1,4 +1,4 @@
-# Linux Perf Utilities
+# Linux Flamegraph Utilities
 
 Utilities used for performance profiling.
 
