@@ -107,13 +107,14 @@ ${PERF_SCRIPT_CMD} > ${PSCRIPT}
 [ ! -s ${PSCRIPT} ] && echo "No perf data captured!"  && clean_exit
 
 # extract the call stack for the flamegraph.pl to generate the svg interactive graph
-${FPATH}stackcollapse-perf.pl ${PSCRIPT} > ${PFOLDED}
+${FPATH}stackcollapse-perf.pl --all ${PSCRIPT} > ${PFOLDED}
 
 # cat all the callgraph to make the summary
 cat ${PFOLDED} >> ${PFOLDED_SUM}
 
 if [[ $GREP_STRINGS == "" ]]; then
-    cat ${PFOLDED} | ${FPATH}flamegraph.pl > ${PSVG}
+    #cat ${PFOLDED} | ${FPATH}flamegraph.pl > ${PSVG}
+    grep -Pv 'addr2line|stackcollapse' ${PFOLDED} | ${FPATH}flamegraph.pl --color java > ${PSVG}
 else
     # add the string name to the SVG name to identify the file easily
     PSVG="${PFOLDED}S$GREP_STRINGS.svg"
