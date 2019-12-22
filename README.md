@@ -22,7 +22,7 @@ It's preferred to add the \"sudo\" as reading the /proc/kallsyms need the root p
 
 ```
 $ git clone https://github.com/bboymimi/perf-utils.git
-$ sudo easy-flamegraph.pl -i perf.data
+$ sudo easy-flamegraph.sh -i perf.data
 ```
 
 Or grep the specific string you are interested to generate the FlameGraph:
