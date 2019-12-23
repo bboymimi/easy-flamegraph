@@ -1,0 +1,4 @@
+PATH=/home/vin/os/easy-flamegraph/:/usr/sbin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Flamegraph-mem sample in 1 minute period
+*/1 * * * * root command -v flamegraph-mem --oneshot > /dev/null
