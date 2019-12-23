@@ -1,0 +1,433 @@
+#!/bin/bash
+
+APPEND_STRINGS=""
+CHK_PKG=""
+DIGIT="^[0-9]+$"
+FPATH=`pwd`"/"
+FPERF="`pwd`/perf-output"
+GLIBC_APPEND=""
+GLIBC_HOOK=false
+GREP_STRINGS=""
+KEEP_SVG=false
+KEEP_SVG_OPTION="-t" # tar the perf.data by default
+KMEM_APPEND=""
+KMEM_HOOK=false
+PERF_CMD=""
+PERF_DATA="perf.mem"
+PERF_DATA_FINAL=""
+PERF_TMP_CMD=""
+PFOLDED_SUM="${FPERF}/stack_sum"
+PFOLDED_SUM_FINAL="${FPERF}/callstack_sum_final"
+PFOLDED_SUM_FINAL_SVG="${FPERF}/callstack_sum_final.svg"
+PID=""
+PROBE_POINTS=""
+REP=1
+RSS=""
+SLEEP_TIME="3"
+SRATE=99
+TCMALLOC_APPEND=""
+TCMALLOC_HOOK=false
+THRESHOLD_SIZE="0"
+
+declare -A stack_array
+
+GLIBC=$(ls /lib/x86_64-linux-gnu/libc* | grep -P 'libc-\d+\.\d+\.so')
+TCMALLOC=$(ls /usr/lib/x86_64-linux-gnu/libtcmalloc.so.* | grep -P 'libtcmalloc\.so\.\d+\.+\d*\.*\d*')
+
+usage_function() {
+	echo "usage: `basename $0` OPTIONS VALUE"
+	echo
+	echo "example: `basename $0` -a <append string> -g <partial process name for pgrep > -p <process ID>"
+	echo
+	echo "OPTIONS:"
+	echo "	-a - append process name strings"
+	echo "	  to append specific strings e.g., qemu/compiz, to easily differentiate perf.data"
+	echo "	-g - grep strings"
+	echo "	  to grep specific strings e.g., qemu, to profile"
+	echo "	-p, --pid - process id strings"
+	echo "	  to profile the specific process"
+	echo "	-s, --threshold-size - process RSS size"
+	echo "	  the memory size(RSS kbytes) threshold to start to profile the specific process"
+	echo "	--clean-probes - clean the probe points"
+	echo "	  clean all the inserted probe points"
+	echo "	--glibc - profile the glibc mem operation"
+	echo "	  add the probe points to the glibc related mem operation"
+	echo "	--keep-svg - clean up all the intermediate files except svg"
+	echo "	  clean up the perf intermediate files and keep on the .svg flamegraph"
+	echo "	--kmem - profile the kernel mem operation"
+	echo "	  add the probe points to the kernel memory operation"
+	echo "	--sample-rate - the sample rate given to perf"
+	echo "	  the default sample rate given to 'perf record -F xxx'. It's 99 by default to"
+	echo "	  minimize the data size. The size is limited by /proc/sys/kernel/perf_event_max_sample_rate"
+	echo "	--tcmalloc - profile the tcmalloc mem operation"
+	echo "	  add the probe points to the tcmalloc related operation"
+}
+
+threshold_check() {
+	if [ "$PID" != "" ]; then
+		if [[ ! "$PID" =~ $DIGIT ]] || ! kill -s 0 $PID; then
+			echo "The PID: $PID doesn't exist, please check again!"
+			exit 1
+		fi
+
+		# -s is only meaningful when -p is used
+		if [[ ! "$THRESHOLD_SIZE" =~ $DIGIT ]]; then
+			echo "Please input a valid(digital) RSS size threshold to monitor."
+			echo ""
+			echo "perf-mem-alloc.sh -s <RSS size(kbytes)>"
+			exit 1
+		fi
+
+		RSS=$(ps -o pid,comm,rss -p $PID| grep -v PID)
+		RSS=${RSS##* }
+		echo
+		echo "  After the memory usage goes beyong $THRESHOLD_SIZE KB, the memory allocation/free profiling will be started!"
+		echo
+		echo "  Process detail:"
+		echo "$(ps -o pid,comm,rss,command -p $PID)"
+		echo
+		while (($RSS < THRESHOLD_SIZE)); do
+			elapsed=`date --utc --date="@$SECONDS" +%H:%M:%S`
+			echo -n -e "\r  elapsed: $elapsed   . The RSS($RSS KB) of PID:$PID < monitoring threshold: $THRESHOLD_SIZE KB"
+			sleep $SLEEP_TIME
+		done
+
+		echo
+		echo "The memory usage of PID:$PID(RSS:$RSS KB) goes above the threshold: $THRESHOLD_SIZE KB!!"
+		echo
+		echo "Start to profile..."
+	else
+		echo "Profile the all system memory alloc/free!"
+	fi
+}
+
+required_tools_checking() {
+
+	# return 1 if linux-tools-generic is installed, else return 0
+	CHK_PKG=$(dpkg-query -W -f='${Status}' linux-tools-common 2>/dev/null | grep -c "ok installed")
+	[ $CHK_PKG -eq 0 ] && apt-get install -y linux-tools-common
+}
+
+clean_probe_points() {
+	echo "Clean up the probe points before starting the profiling..."
+	PROBE_POINTS=$(perf probe -l | awk '{print $1}')
+	for i in $PROBE_POINTS; do
+	perf probe -d $i
+	done
+}
+
+perf_periodically_collect() {
+	PERF_TMP_CMD="perf record $KMEM_APPEND $GLIBC_APPEND $TCMALLOC_APPEND -a -F $SRATE --call-graph dwarf"
+
+	[[ $PID != "" ]] && PERF_TMP_CMD="$PERF_TMP_CMD -p $PID"
+	[[ $GREP_STRINGS != "" ]] && PERF_TMP_CMD="$PERF_TMP_CMD -p `pgrep $GREP_STRINGS`"
+
+	while true; do
+		DATE=$(date +%Y-%m-%d_%H%M%S)
+
+		PERF_DATA_FINAL=${FPERF}/${DATE}.${PERF_DATA}.${REP}
+
+		clear
+		# press ctrl+c when you want to stop the profiling
+		PERF_CMD="$PERF_TMP_CMD -o $PERF_DATA_FINAL sleep 1"
+
+		echo "###########"
+		echo "# CMD: $PERF_CMD"
+		echo "# The Perf file will be generated to \"$PERF_DATA_FINAL\""
+		echo "# Profiling..."
+		echo "###########"
+
+		# Profiling the system
+		$PERF_CMD &> /dev/null || break
+
+		(
+			# Generate the flamegraph
+			$(pwd)/easy-flamegraph.sh -i $PERF_DATA_FINAL $KEEP_SVG_OPTION &> /dev/null
+
+			# clean up the perf.data
+			if $KEEP_SVG; then
+				rm $PERF_DATA_FINAL
+			fi
+		) &
+
+		sleep 58
+
+		((REP++))
+	done
+
+	(
+		# Generate the flamegraph
+		$(pwd)/easy-flamegraph.sh -i $PERF_DATA_FINAL $KEEP_SVG_OPTION &> /dev/null
+
+		# clean up the perf.data
+		if $KEEP_SVG; then
+			rm $PERF_DATA_FINAL
+		fi
+	) &
+
+	# wait for all the easy-flamegraph.sh child processes to complete
+	echo "wait for easy-flamegraph to finish processing and compressing..."
+	wait
+}
+
+glibc_mem_probe() {
+
+	# add the probe point related to the memory alloction
+	perf probe -x $GLIBC malloc bytes=%di
+	perf probe -x $GLIBC realloc bytes=%di
+	perf probe -x $GLIBC calloc bytes=%di
+
+	perf probe -x $GLIBC brk bytes=%di
+	perf probe -x $GLIBC sbrk bytes=%di
+	perf probe -x $GLIBC __sbrk bytes=%di
+
+	perf probe -x $GLIBC mmap addr=%di len=%si
+	perf probe -x $GLIBC mmap64 addr=%di len=%si
+
+	perf probe -x $GLIBC free addr=%di
+
+	for a in $(perf probe -l | grep libc | awk '{print $1}'); do
+		GLIBC_APPEND="$GLIBC_APPEND -e $a"
+	done
+
+	#echo GLIBC_APPEND = $GLIBC_APPEND
+}
+
+tcmalloc_mem_probe() {
+
+	# ~/ddebs$ objdump --syms ddebs-libgoogle-perftools4-dbg_2.4-0ubuntu5.16.04.1/usr/lib/debug/.build-id/c3/76c112685221c43033ed32ddd1e138b658483b.debug | grep new
+	# 0000000000247848 l     O .bss   0000000000000004 _ZN12_GLOBAL__N_1L20set_new_handler_lockE
+	# 0000000000247860 l     O .bss   0000000000000004 _ZL11tc_new_mode
+	# 0000000000035f30 l     F google_malloc  0000000000000528 tc_newarray.localalias.44
+	# 0000000000036900 l     F google_malloc  000000000000049e tc_newarray_nothrow.localalias.45
+	# 00000000002474e0 l     O .data  0000000000000048 _ZN4base8internal10new_hooks_E
+	# 0000000000015570 g     F .text  000000000000000d tc_set_new_mode
+	# 0000000000035f30 g     F google_malloc  0000000000000528 tc_newarray
+	# 0000000000036da0 g     F google_malloc  0000000000000005 tc_new_nothrow
+	# 0000000000036460 g     F google_malloc  0000000000000005 tc_new
+	# 0000000000000000       F *UND*  0000000000000000 _ZSt15set_new_handlerPFvvE@@GLIBCXX_3.4
+	# 0000000000015580 g     F .text  0000000000000393 tc_malloc_skip_new_handler
+	# 0000000000036900 g     F google_malloc  000000000000049e tc_newarray_nothrow
+	#
+	# ~$ readelf -n /usr/lib/libtcmalloc.so.4.2.6
+	#
+	# Displaying notes found at file offset 0x00000200 with length 0x00000024:
+	#   Owner                 Data size       Description
+	#   GNU                  0x00000014       NT_GNU_BUILD_ID (unique build ID bitstring)
+	#     Build ID: c376c112685221c43033ed32ddd1e138b658483b
+	#
+	#    78  sudo perf probe -x /usr/lib/libtcmalloc.so.4.2.6 '0x36da0'
+	#    79  sudo perf probe -l
+	#    80  sudo perf probe -x /usr/lib/libtcmalloc.so.4.2.6 '0x36900'
+	#    81  sudo perf probe -l
+	#    82  sudo perf probe -x /usr/lib/libtcmalloc.so.4.2.6 '0x36460'
+	#    83  sudo perf probe -x /usr/lib/libtcmalloc.so.4.2.6 '0x35f30'
+	#    84  sudo perf probe -l
+	#    85  ./stress-test.sh ;sudo perf record -a --call-graph dwarf -e probe_libtcmalloc:abs_1e260 -e probe_libtcmalloc:abs_1e790 -e probe_libtcmalloc:abs_1ec30 -e probe_libtcmalloc:abs_1f0d0 -e probe_libtcmalloc:abs_db20 -e probe_libtcmalloc:abs_35f30 -e probe_libtcmalloc:abs_36460 -e probe_libtcmalloc:abs_36900 -e probe_libtcmalloc:abs_36da0 -p 1329
+	#
+	# $ sudo perf probe -l
+	#   probe_libtcmalloc:abs_1e260 (on tc_newarray in /usr/lib/libtcmalloc_minimal.so.4.2.6)
+	#   probe_libtcmalloc:abs_1e790 (on tc_new in /usr/lib/libtcmalloc_minimal.so.4.2.6)
+	#   probe_libtcmalloc:abs_1ec30 (on operator new[] in /usr/lib/libtcmalloc_minimal.so.4.2.6)
+	#   probe_libtcmalloc:abs_1f0d0 (on operator new in /usr/lib/libtcmalloc_minimal.so.4.2.6)
+	#   probe_libtcmalloc:abs_35f30 (on operator new[] in /usr/lib/libtcmalloc.so.4.2.6)
+
+	# add the probe point related to the memory alloction
+	perf probe -x $TCMALLOC 0x36da0
+	perf probe -x $TCMALLOC 0x36900
+	perf probe -x $TCMALLOC 0x36460
+	perf probe -x $TCMALLOC 0x35f30
+
+	for a in $(perf probe -l | grep tcmalloc | awk '{print $1}'); do
+		TCMALLOC_APPEND="$TCMALLOC_APPEND -e $a"
+	done
+
+	echo TCMALLOC_APPEND = $TCMALLOC_APPEND
+}
+
+kernel_mem_probe() {
+	# add the new probe point of the kernel symbol do_mmap
+	perf probe do_mmap addr=%si len=%dx prot=%cx
+
+	# add the handle_mm_fault kernel function
+	perf probe handle_mm_fault addr=%si
+
+	for a in $(perf probe -l | grep -P '\s*probe:' | awk '{print $1}'); do
+		KMEM_APPEND="$KMEM_APPEND -e $a"
+	done
+
+	#echo KMEM_APPEND = $KMEM_APPEND
+}
+
+merge_all_flamegraphs() {
+	# rm the PFOLDED_SUM if exist to avoid the overlay of previous time
+	[ ! -s ${PFOLDED_SUM} ] && echo "Aggregated graph is empty! No perf data captured!" && return
+
+	DATE=$(date +%Y-%m-%d_%H%M%S)
+
+	NAME=${DATE}
+	[[ $APPEND_STRINGS != "" ]] && NAME=${NAME}.${APPEND_STRINGS}
+	[[ $PID != "" ]] && NAME=${NAME}.${PID}
+
+	# recalculate the counts make the summarized flamegraph
+	while read -r callstack_counts; do
+		counts=$(echo $callstack_counts |perl -n -e '/(\d)+$/; print $&;')
+		callstack=$(echo $callstack_counts |perl -n -e '/(.*) (\d)+$/; print $1;')
+		stack_array[$callstack]=$((${stack_array[$callstack]} + $counts))
+	done < ${PFOLDED_SUM}
+
+	[ -f "${PFOLDED_SUM_FINAL}" ] && rm "${PFOLDED_SUM_FINAL}"
+	for stack in "${!stack_array[@]}"; do
+		echo "$stack ${stack_array[$stack]}" >> "$PFOLDED_SUM_FINAL"
+	done
+
+	cat "$PFOLDED_SUM_FINAL" | ${FPATH}flamegraph.pl > "$PFOLDED_SUM_FINAL_SVG"
+}
+
+clean_intermediate_files() {
+	[ -f "${PFOLDED_SUM}" ] && rm "${PFOLDED_SUM}"
+	[ -f "${PFOLDED_SUM_FINAL}" ] && rm "${PFOLDED_SUM_FINAL}"
+}
+[ $(id -u) -ne 0 ] && echo "Must be root!!" && exit 1
+
+kill_child_processes() {
+
+    local isTopmost=$1
+    local curPid=$2
+    local childPid
+
+    childPids=`ps -o pid --no-headers --ppid ${curPid}`
+    # echo child of ${curPid}: ${childPids}
+
+    for childPid in $childPids; do
+        kill_child_processes 0 $childPid
+    done
+
+    if [ $isTopmost -eq 0 ]; then
+        # echo kill -9 $curPid
+	kill -9 $curPid &> /dev/null
+    fi
+}
+
+exit_work() {
+
+	# clean the probe point after profiling the system
+	clean_probe_points
+
+	# merge all flamegraphs to form a bigger picture
+	# TODO: disable the merge_all_flamegraphs temporarily until better
+	# ideas come.
+
+	# merge_all_flamegraphs
+
+	# clean up all the intermediate files
+	[ $KEEP_SVG ] && clean_intermediate_files
+
+	kill_child_processes 1 $$
+
+	DATE=$(date +%Y-%m-%d_%H%M%S)
+	if [ ! -z "$(ls -A ./perf-output)" ]; then
+		tar zcvf ./perf-report-${DATE}.tar.gz ./perf-output/
+		echo "Please send back ./perf-report-${DATE}.tar.gz"
+	fi
+
+	# kill -9 $(ps -9 pgid= $$) can do the trick to kill the process group too.
+	#PGID=$(ps -o pgid= $$)
+
+	## Kill needs to be done in a new process group to avoid killing itself.
+	#setsid kill -- -$PGID
+
+	exit 0
+}
+
+while (($# > 0))
+do
+	case $1 in
+		-a)
+			APPEND_STRINGS=$2
+			shift 2
+			;;
+		-g)
+			GREP_STRINGS=$2
+			shift 2
+			;;
+		-p|--pid)
+			PID=$2
+			shift 2
+			;;
+		-s|--threshold-size)
+			THRESHOLD_SIZE=$2
+			shift 2
+			;;
+		--clean-probes)
+			clean_probe_points
+			exit 0
+			;;
+		--glibc)
+			GLIBC_HOOK=true
+			shift
+			;;
+		--keep-svg)
+			KEEP_SVG=true
+			KEEP_SVG_OPTION="-d"
+			shift
+			;;
+		--kmem)
+			KMEM_HOOK=true
+			shift
+			;;
+		--sample-rate)
+			SRATE=$2
+			shift 2
+			;;
+		--tcmalloc)
+			TCMALLOC_HOOK=true
+			shift
+			;;
+		-h|--help)
+			usage_function
+			exit 0
+			;;
+		*)
+			echo "Error!! Invalid input: $1"
+			usage_function
+			exit 1
+			;;
+	esac
+done
+
+# append the string of the profiled process name to differentiate the perf.data
+[[ "$APPEND_STRINGS" != "" ]] && PERF_DATA=$PERF_DATA.$APPEND_STRINGS$PID
+
+# clean up the perf-output
+[ "$(ls $FPERF)" != "" ] && rm $FPERF/* && echo "clean up the perf data successfully!!"
+
+mkdir -p $FPERF
+
+#trap EXIT signal only
+trap "exit_work" EXIT
+
+# check the process RSS threshold_size periodically(3s) before starting profiling
+threshold_check
+
+# check if the required tool(s) is installed. e.g. linux-tools-common.
+required_tools_checking
+
+# clean the probe point before adding the new probe point
+clean_probe_points
+
+# glibc memory-related function probes
+$GLIBC_HOOK && glibc_mem_probe
+
+# tcmalloc memory-related function probes
+$TCMALLOC_HOOK && tcmalloc_mem_probe
+
+# kernel memory-related function probes
+$KMEM_HOOK && kernel_mem_probe
+
+# collect the perf data periodically in case the perf file gets too big
+perf_periodically_collect &
+
+sleep 1
+# press any key to quit
+read -p $'Press any keys to quit...\n'
