@@ -31,17 +31,26 @@ done
 
 # check if the command line has assign the perf.data file. e.g. '-i xxx.perf.data'
 if [ ! -e "$PERF_REPORT" ]; then
-    # if command didn't assign the perf data, go ahead to check the current folder
-    echo "File doesn't exist: $PERF_REPORT!!"
-    if [ -e "`dirname $0`/perf.data" ]; then
-        echo "Do you mean the `dirname $0`/perf.data?"
-    fi
+    if [ x"$PERF_REPORT" = x"" ]; then
+        if [ -e "`dirname $0`/perf.data" ]; then
+	    PERF_REPORT="`dirname $0`/perf.data"
+        else
+            echo "perf.data doesn't exist!"
+            exit -1
+        fi
+    else
+        # if command didn't assign the perf data, go ahead to check the current folder
+        echo "File doesn't exist: $PERF_REPORT!!"
+        if [ -e "`dirname $0`/perf.data" ]; then
+            echo "Do you mean the `dirname $0`/perf.data?"
+        fi
         echo "Please use -i to append the perf.data"
         echo "usage: $0 -g <grep string to make specific flamegraph> -i <perf file> -k <kernel version #>"
         echo "	i - perf report file"
         echo "	k - kernel version - specific kernel version number"
         echo "	g - grep strings - to grep specific strings e.g., kworker, to make flamegraph"
         exit -1
+    fi
 fi
 
 echo "Use the $PERF_REPORT as the source of the FlameGraph."
