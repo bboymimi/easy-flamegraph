@@ -9,7 +9,8 @@ GREP_STRINGS=""
 KERNEL_VERSION=""
 SYMFS=""
 TAR=false
-DATE=$(date +%Y-%m-%d_%H:%M:%S)
+#DATE=$(date +%Y-%m-%d_%H:%M:%S)
+DATE=""
 
 clean_exit() {
 
@@ -90,9 +91,9 @@ if [ ! -e $FPATH ]; then
     echo "Installation Success!"
 fi
 
-PSCRIPT="${FPERF}${DATE}.`basename ${PERF_REPORT}`.script"
-PFOLDED="${FPERF}${DATE}.`basename ${PERF_REPORT}`.folded"
-PSVG="${FPERF}${DATE}.`basename ${PERF_REPORT}`.svg"
+PSCRIPT="${FPERF}`basename ${PERF_REPORT}`.script"
+PFOLDED="${FPERF}`basename ${PERF_REPORT}`.folded"
+PSVG="${FPERF}`basename ${PERF_REPORT}`.svg"
 PFOLDED_SUM="${FPERF}stack_sum"
 
 # mkdir the folder to store the perf report data
