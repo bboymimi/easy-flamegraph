@@ -12,6 +12,7 @@ KEEP_SVG=false
 KEEP_SVG_OPTION="-t" # tar the perf.data by default
 KMEM_APPEND=""
 KMEM_HOOK=false
+ONESHOT=false
 PERF_CMD=""
 PERF_DATA="perf.mem"
 PERF_DATA_FINAL=""
@@ -127,7 +128,10 @@ perf_periodically_collect() {
 
 		PERF_DATA_FINAL=${FPERF}/${DATE}.${PERF_DATA}.${REP}
 
-		clear
+		if ! $ONESHOT; then
+		       clear
+		fi
+
 		# press ctrl+c when you want to stop the profiling
 		PERF_CMD="$PERF_TMP_CMD -o $PERF_DATA_FINAL sleep 1"
 
@@ -150,20 +154,26 @@ perf_periodically_collect() {
 			fi
 		) &
 
+		if $ONESHOT; then
+		       break;
+		fi
+
 		sleep 58
 
 		((REP++))
 	done
 
-	(
-		# Generate the flamegraph
-		$(pwd)/easy-flamegraph.sh -i $PERF_DATA_FINAL $KEEP_SVG_OPTION &> /dev/null
+	if ! $ONESHOT; then
+		(
+			# Generate the flamegraph
+			"${FPATH}"/easy-flamegraph.sh -i $PERF_DATA_FINAL $KEEP_SVG_OPTION &> /dev/null
 
-		# clean up the perf.data
-		if $KEEP_SVG; then
-			rm $PERF_DATA_FINAL
-		fi
-	) &
+			# clean up the perf.data
+			if $KEEP_SVG; then
+				rm $PERF_DATA_FINAL
+			fi
+		) &
+	fi
 
 	# wait for all the easy-flamegraph.sh child processes to complete
 	echo "wait for easy-flamegraph to finish processing and compressing..."
@@ -376,6 +386,10 @@ do
 			KMEM_HOOK=true
 			shift
 			;;
+		--oneshot)
+			ONESHOT=true
+			shift
+			;;
 		--sample-rate)
 			SRATE=$2
 			shift 2
@@ -400,7 +414,7 @@ done
 [[ "$APPEND_STRINGS" != "" ]] && PERF_DATA=$PERF_DATA.$APPEND_STRINGS$PID
 
 # clean up the perf-output
-[ "$(ls $FPERF)" != "" ] && rm $FPERF/* && echo "clean up the perf data successfully!!"
+[ "$(ls $FPERF)" != "" -a "$ONESHOT" = "false" ] && rm $FPERF/* && echo "clean up the perf data successfully!!"
 
 mkdir -p $FPERF
 
@@ -428,6 +442,11 @@ $KMEM_HOOK && kernel_mem_probe
 # collect the perf data periodically in case the perf file gets too big
 perf_periodically_collect &
 
-sleep 1
-# press any key to quit
-read -p $'Press any keys to quit...\n'
+if ! $ONESHOT; then
+	sleep 1
+	# press any key to quit
+	read -p $'Press any keys to quit...\n'
+else
+	# wait for the children's collection to stop
+	wait
+fi
