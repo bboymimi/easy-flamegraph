@@ -3,8 +3,8 @@
 APPEND_STRINGS=""
 CHK_PKG=""
 DIGIT="^[0-9]+$"
-FPATH=`pwd`"/"
-FPERF="`pwd`/perf-output"
+FPATH=`dirname $0`"/"
+FPERF="`dirname $0`/perf-output"
 GLIBC_APPEND=""
 GLIBC_HOOK=false
 GREP_STRINGS=""
