@@ -125,20 +125,23 @@ else
 fi
 
 if $TAR; then
-    tar zcvf ${PERF_REPORT}.tar.gz ${PERF_REPORT}* ${FPERF}
-    echo "# The perf-related file: \"${PERF_REPORT}\" has been tared."
-    echo "# The perf-related folder: \"${FPERF}\" has been tared."
-    rm $(ls ${PERF_REPORT}* | grep -v tar.gz)
-    echo "# Delete the related perf report files:" ${PERF_REPORT}*
+    tar zcvf "${FPERF}""${PERF_REPORT}".tar.gz "${PSCRIPT}" "${PFOLDED}" "${PSVG}"
+    # echo "# The perf-related file: \""${PSCRIPT}" "${PFOLDED}" "${PSVG}"\" has been tared."
+    rm "${PSCRIPT}" "${PFOLDED}" "${PSVG}"
+    # echo "# Delete the related perf report files:" "${PSCRIPT}" "${PFOLDED}" "${PSVG}"
 fi
 
 echo "###########"
 echo "# The perf interactive .svg graph \"${PSVG}\" has been generated."
-echo ""
+echo "#"
 echo "# The FlameGraph can be viewed by:"
 echo "# $ google-chrome-stable ${PSVG}"
 echo "# or"
 echo "# $ firefox ${PSVG}"
+echo "#"
+if $TAR; then
+	echo "# The intermediate files are in: "${FPERF}""${PERF_REPORT}".tar.gz"
+fi
 echo "###########"
 
 clean_exit
