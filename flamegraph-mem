@@ -26,6 +26,7 @@ REP=1
 RSS=""
 SLEEP_TIME="3"
 SRATE=99
+TAR=false
 TCMALLOC_APPEND=""
 TCMALLOC_HOOK=false
 THRESHOLD_SIZE="0"
@@ -337,10 +338,12 @@ exit_work() {
 
 	kill_child_processes 1 $$
 
-	DATE=$(date +%Y-%m-%d_%H%M%S)
-	if [ ! -z "$(ls -A ./perf-output)" ]; then
-		tar zcvf ./perf-report-${DATE}.tar.gz ./perf-output/
-		echo "Please send back ./perf-report-${DATE}.tar.gz"
+	if $TAR; then
+		DATE=$(date +%Y-%m-%d_%H%M%S)
+		if [ ! -z "$(ls -A "${FPERF}")" ]; then
+			tar zcvf "${FPATH}"flamegraph-mem-"${DATE}".tar.gz "${FPERF}"
+			echo "Please send back "${FPATH}"flamegraph-mem-"${DATE}".tar.gz"
+		fi
 	fi
 
 	# kill -9 $(ps -9 pgid= $$) can do the trick to kill the process group too.
@@ -374,6 +377,10 @@ do
 		-s|--threshold-size)
 			THRESHOLD_SIZE=$2
 			shift 2
+			;;
+		-t)
+			TAR=true
+			shift
 			;;
 		--clean-probes)
 			clean_probe_points
