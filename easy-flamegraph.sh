@@ -21,12 +21,13 @@ clean_exit() {
 	exit 0
 }
 
-while getopts "dg:i:k:th" opt; do
+while getopts "dg:i:k:o:th" opt; do
     case $opt in
         d) DROP_PERF_DATA=true;;
         g) GREP_STRINGS=$OPTARG ;;
         i) PERF_REPORT=$OPTARG ;;
         k) KERNEL_VERSION=$OPTARG ;;
+	o) FPERF="$OPTARG"/ ;;
         s) SYMFS=$OPTARG ;;
         t) TAR=true ;;
         h|*)
@@ -35,6 +36,7 @@ while getopts "dg:i:k:th" opt; do
             echo "	i - perf report file"
             echo "	k - kernel version - specific kernel version number"
             echo "	g - grep strings - to grep specific strings e.g., kworker, to make flamegraph"
+	    echo "	o - output directory - the output directory to save the .svg/script file"
             echo "	s - symfs - to assign the directory to search for the debug symbol of kernel modules"
             echo "	t - tar the $FPERF"
             exit 0

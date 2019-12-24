@@ -1,4 +1,4 @@
 PATH=/home/vin/os/easy-flamegraph:/usr/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Flamegraph-mem sample in 1 minute period
-*/1 * * * * root flamegraph-mem --keep-svg --oneshot > /dev/null
+*/1 * * * * root flamegraph-mem -o /var/log/easy-flamegraph --keep-svg --oneshot > /dev/null

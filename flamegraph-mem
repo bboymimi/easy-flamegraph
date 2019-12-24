@@ -45,6 +45,8 @@ usage_function() {
 	echo "	  to append specific strings e.g., qemu/compiz, to easily differentiate perf.data"
 	echo "	-g - grep strings"
 	echo "	  to grep specific strings e.g., qemu, to profile"
+	echo "	-o - output file directory"
+	echo "	  specificy the output file direcotry for .svg/perf.script/folded stack"
 	echo "	-p, --pid - process id strings"
 	echo "	  to profile the specific process"
 	echo "	-s, --threshold-size - process RSS size"
@@ -146,7 +148,7 @@ perf_periodically_collect() {
 
 		(
 			# Generate the flamegraph
-			$(pwd)/easy-flamegraph.sh -i $PERF_DATA_FINAL $KEEP_SVG_OPTION &> /dev/null
+			"${FPATH}"/easy-flamegraph.sh -i "$PERF_DATA_FINAL" "$KEEP_SVG_OPTION" -o "$FPERF" &> /dev/null
 
 			# clean up the perf.data
 			if $KEEP_SVG; then
@@ -166,7 +168,7 @@ perf_periodically_collect() {
 	if ! $ONESHOT; then
 		(
 			# Generate the flamegraph
-			"${FPATH}"/easy-flamegraph.sh -i $PERF_DATA_FINAL $KEEP_SVG_OPTION &> /dev/null
+			"${FPATH}"/easy-flamegraph.sh -i $PERF_DATA_FINAL $KEEP_SVG_OPTION -o "$FPERF" &> /dev/null
 
 			# clean up the perf.data
 			if $KEEP_SVG; then
@@ -359,6 +361,10 @@ do
 			;;
 		-g)
 			GREP_STRINGS=$2
+			shift 2
+			;;
+		-o)
+			FPERF=$2
 			shift 2
 			;;
 		-p|--pid)
