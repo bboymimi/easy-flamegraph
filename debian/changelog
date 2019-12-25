@@ -1,0 +1,17 @@
+easy-flamegraph (0.0.2-1ubuntu1) bionic; urgency=medium
+
+  * New release point version 0.0.2
+
+ -- Gavin Guo <gavin.guo@canonical.com>  Thu, 26 Dec 2019 07:16:27 +0800
+
+easy-flamegraph (0.0.1-1ubuntu1) bionic; urgency=medium
+
+  * Initialise the debian folder
+
+ -- Gavin Guo <gavin.guo@canonical.com>  Wed, 25 Dec 2019 10:43:21 +0800
+
+easy-flamegraph (0.0.1-1) unstable; urgency=medium
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Gavin Guo <gavin.guo@canonical.com>  Tue, 24 Dec 2019 20:54:40 +0800
