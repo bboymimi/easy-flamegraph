@@ -12,6 +12,17 @@ TAR=false
 #DATE=$(date +%Y-%m-%d_%H:%M:%S)
 DATE=""
 
+usage_function() {
+            echo "usage: $0 -g <grep string to make specific flamegraph> -i <perf file> -k <kernel version #>"
+            echo "	d - drop the perf related data(include perf.data!!) and keep the .svg flamegraph file to save space"
+            echo "	g - grep strings - to grep specific strings e.g., kworker, to make flamegraph"
+            echo "	i - perf report file"
+            echo "	k - kernel version - specific kernel version number"
+	    echo "	o - output directory - the output directory to save the .svg/script file"
+            echo "	s - symfs - to assign the directory to search for the debug symbol of kernel modules"
+            echo "	t - tar the $FPERF"
+}
+
 clean_exit() {
 
 	if $DROP_PERF_DATA; then
@@ -31,14 +42,7 @@ while getopts "dg:i:k:o:th" opt; do
         s) SYMFS=$OPTARG ;;
         t) TAR=true ;;
         h|*)
-            echo "usage: $0 -g <grep string to make specific flamegraph> -i <perf file> -k <kernel version #>"
-            echo "	d - drop the perf related data(include perf.data!!) and keep the .svg flamegraph file to save space"
-            echo "	i - perf report file"
-            echo "	k - kernel version - specific kernel version number"
-            echo "	g - grep strings - to grep specific strings e.g., kworker, to make flamegraph"
-	    echo "	o - output directory - the output directory to save the .svg/script file"
-            echo "	s - symfs - to assign the directory to search for the debug symbol of kernel modules"
-            echo "	t - tar the $FPERF"
+	    usage_function
             exit 0
             ;;
     esac
@@ -47,23 +51,20 @@ done
 # check if the command line has assign the perf.data file. e.g. '-i xxx.perf.data'
 if [ ! -e "$PERF_REPORT" ]; then
     if [ x"$PERF_REPORT" = x"" ]; then
+        # if command didn't assign the perf data, go ahead to check the current folder
         if [ -e "`dirname $0`/perf.data" ]; then
 	    PERF_REPORT="`dirname $0`/perf.data"
         else
-            echo "perf.data doesn't exist!"
+            echo "`dirname $0`/perf.data doesn't exist!"
+            echo "Please use -i to append the perf.data"
             exit -1
         fi
     else
-        # if command didn't assign the perf data, go ahead to check the current folder
+	# assign the perf.data by '-i' but doesn't exist!
         echo "File doesn't exist: $PERF_REPORT!!"
         if [ -e "`dirname $0`/perf.data" ]; then
             echo "Do you mean the `dirname $0`/perf.data?"
         fi
-        echo "Please use -i to append the perf.data"
-        echo "usage: $0 -g <grep string to make specific flamegraph> -i <perf file> -k <kernel version #>"
-        echo "	i - perf report file"
-        echo "	k - kernel version - specific kernel version number"
-        echo "	g - grep strings - to grep specific strings e.g., kworker, to make flamegraph"
         exit -1
     fi
 fi
