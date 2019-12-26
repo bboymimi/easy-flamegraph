@@ -1,3 +1,9 @@
+easy-flamegraph (0.0.2-1ubuntu2) bionic; urgency=medium
+
+  * Improve the perf.data checking to make it more clearer
+
+ -- Gavin Guo <gavin.guo@canonical.com>  Thu, 26 Dec 2019 12:55:48 +0800
+
 easy-flamegraph (0.0.2-1ubuntu1) bionic; urgency=medium
 
   * New release point version 0.0.2
