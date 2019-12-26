@@ -15,11 +15,10 @@ DATE=""
 clean_exit() {
 
 	if $DROP_PERF_DATA; then
-	rm ${PFOLDED}
-		rm ${PSCRIPT}
+		[ -e "${PFOLDED}" ] && rm "${PFOLDED}"
+		[ -e "${PSCRIPT}" ] && rm "${PSCRIPT}"
 	fi
 
-	exit 0
 }
 
 while getopts "dg:i:k:o:th" opt; do
@@ -104,10 +103,13 @@ mkdir -p ${FPERF}
 [[ $KERNEL_VERSION != "" ]] && PERF_SCRIPT_CMD="${PERF_SCRIPT_CMD} -k $KERNEL_VERSION"
 [[ $SYMFS != "" ]] && PERF_SCRIPT_CMD="${PERF_SCRIPT_CMD} --symfs $SYMFS"
 
+#trap EXIT signal only
+trap "clean_exit" EXIT
+
 # generate the perf script file for the stackcollapse to extract the call stack
 ${PERF_SCRIPT_CMD} > ${PSCRIPT}
 
-[ ! -s ${PSCRIPT} ] && echo "No perf data captured!"  && clean_exit
+[ ! -s ${PSCRIPT} ] && echo "No perf data captured!"  && exit
 
 # extract the call stack for the flamegraph.pl to generate the svg interactive graph
 ${FPATH}stackcollapse-perf.pl --all ${PSCRIPT} > ${PFOLDED}
@@ -143,5 +145,3 @@ if $TAR; then
 	echo "# The intermediate files are in: "${FPERF}""${PERF_REPORT}".tar.gz"
 fi
 echo "###########"
-
-clean_exit
