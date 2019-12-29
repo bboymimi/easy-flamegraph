@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FPATH="$HOME/os/FlameGraph/"
+FPATH="`dirname $0`/FlameGraph/"
 DROP_PERF_DATA=false
 FPERF="`dirname $0`/perf-output/"
 PERF_SCRIPT_CMD="perf script"
@@ -79,16 +79,11 @@ if [ ! -r $PERF_REPORT ]; then
 fi
 
 # Try to clone the FlameGraph if it doesn't exist.
-if [ ! -e $FPATH ]; then
-    echo "Install the FlameGraph by the following instructions:"
+if [ -z "$(ls -A "$FPATH")" ]; then
+    echo "Clone the FlameGraph by the following instructions:"
 
-    echo "mkdir -p $HOME/os/"
-    mkdir -p $HOME/os/
-
-    echo "git clone https://github.com/brendangregg/FlameGraph $HOME/os/FlameGraph"
-    git clone https://github.com/brendangregg/FlameGraph $HOME/os/FlameGraph
-
-    echo "Installation Success!"
+    echo "git submodule update --init FlameGraph"
+    git submodule update --init FlameGraph
 fi
 
 PSCRIPT="${FPERF}`basename ${PERF_REPORT}`.script"
