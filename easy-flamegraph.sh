@@ -32,20 +32,47 @@ clean_exit() {
 
 }
 
-while getopts "dg:i:k:o:th" opt; do
-    case $opt in
-        d) DROP_PERF_DATA=true;;
-        g) GREP_STRINGS=$OPTARG ;;
-        i) PERF_REPORT=$OPTARG ;;
-        k) KERNEL_VERSION=$OPTARG ;;
-	o) FPERF="$OPTARG"/ ;;
-        s) SYMFS=$OPTARG ;;
-        t) TAR=true ;;
-        h|*)
-	    usage_function
-            exit 0
-            ;;
-    esac
+while (($# > 0))
+do
+	case $1 in
+		-d)
+			DROP_PERF_DATA=true
+			shift
+			;;
+		-g)
+			GREP_STRINGS=$2
+			shift 2
+			;;
+		-i)
+			PERF_REPORT=$2
+			shift 2
+			;;
+		-k)
+			KERNEL_VERSION=$2
+			shift 2
+			;;
+		-o)
+			FPERF=$2/
+			shift 2
+			;;
+		-s)
+			SYMFS=$2
+			shift 2
+			;;
+		-t)
+			TAR=true
+			shift
+			;;
+		-h|--help)
+			usage_function
+			exit 0
+			;;
+		*)
+			echo "Error!! Invalid input: $1"
+			usage_function
+			exit 1
+			;;
+	esac
 done
 
 # check if the command line has assign the perf.data file. e.g. '-i xxx.perf.data'
