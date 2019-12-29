@@ -1,0 +1,75 @@
+From: Gavin Guo <gavin.guo@canonical.com>
+Date: Sun, 29 Dec 2019 11:18:43 +0800
+Subject: Abandon the getopts to support the long options
+
+Signed-off-by: Gavin Guo <gavin.guo@canonical.com>
+---
+ easy-flamegraph.sh | 55 ++++++++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 41 insertions(+), 14 deletions(-)
+
+diff --git a/easy-flamegraph.sh b/easy-flamegraph.sh
+index 9d92fec..0cbbdcf 100755
+--- a/easy-flamegraph.sh
++++ b/easy-flamegraph.sh
+@@ -32,20 +32,47 @@ clean_exit() {
+ 
+ }
+ 
+-while getopts "dg:i:k:o:th" opt; do
+-    case $opt in
+-        d) DROP_PERF_DATA=true;;
+-        g) GREP_STRINGS=$OPTARG ;;
+-        i) PERF_REPORT=$OPTARG ;;
+-        k) KERNEL_VERSION=$OPTARG ;;
+-	o) FPERF="$OPTARG"/ ;;
+-        s) SYMFS=$OPTARG ;;
+-        t) TAR=true ;;
+-        h|*)
+-	    usage_function
+-            exit 0
+-            ;;
+-    esac
++while (($# > 0))
++do
++	case $1 in
++		-d)
++			DROP_PERF_DATA=true
++			shift
++			;;
++		-g)
++			GREP_STRINGS=$2
++			shift 2
++			;;
++		-i)
++			PERF_REPORT=$2
++			shift 2
++			;;
++		-k)
++			KERNEL_VERSION=$2
++			shift 2
++			;;
++		-o)
++			FPERF=$2/
++			shift 2
++			;;
++		-s)
++			SYMFS=$2
++			shift 2
++			;;
++		-t)
++			TAR=true
++			shift
++			;;
++		-h|--help)
++			usage_function
++			exit 0
++			;;
++		*)
++			echo "Error!! Invalid input: $1"
++			usage_function
++			exit 1
++			;;
++	esac
+ done
+ 
+ # check if the command line has assign the perf.data file. e.g. '-i xxx.perf.data'
