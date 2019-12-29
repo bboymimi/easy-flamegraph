@@ -1,3 +1,10 @@
+easy-flamegraph (0.0.2-1ubuntu3) bionic; urgency=medium
+
+  * Add the FlameGraph as the submodule
+  * Modify the script to support the FlameGraph submodule
+
+ -- Gavin Guo <gavin.guo@canonical.com>  Sun, 29 Dec 2019 10:08:59 +0800
+
 easy-flamegraph (0.0.2-1ubuntu2) bionic; urgency=medium
 
   * Improve the perf.data checking to make it more clearer
