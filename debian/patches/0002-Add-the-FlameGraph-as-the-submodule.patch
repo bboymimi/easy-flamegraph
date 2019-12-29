@@ -1,0 +1,19 @@
+From: Gavin Guo <gavin.guo@canonical.com>
+Date: Sun, 29 Dec 2019 07:31:43 +0800
+Subject: Add the FlameGraph as the submodule
+
+Signed-off-by: Gavin Guo <gavin.guo@canonical.com>
+---
+ .gitmodules | 3 +++
+ 1 file changed, 3 insertions(+)
+ create mode 100644 .gitmodules
+
+diff --git a/.gitmodules b/.gitmodules
+new file mode 100644
+index 0000000..e0c2a22
+--- /dev/null
++++ b/.gitmodules
+@@ -0,0 +1,3 @@
++[submodule "FlameGraph"]
++	path = FlameGraph
++	url = https://github.com/brendangregg/FlameGraph
