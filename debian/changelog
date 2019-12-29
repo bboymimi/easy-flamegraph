@@ -1,3 +1,9 @@
+easy-flamegraph (0.0.2-1ubuntu4) bionic; urgency=medium
+
+  * Abandon the getopts to support the long options
+
+ -- Gavin Guo <gavin.guo@canonical.com>  Mon, 30 Dec 2019 07:32:11 +0800
+
 easy-flamegraph (0.0.2-1ubuntu3) bionic; urgency=medium
 
   * Add the FlameGraph as the submodule
