@@ -2,7 +2,7 @@
 
 FPATH="`dirname $0`/FlameGraph/"
 DROP_PERF_DATA=false
-FPERF="`dirname $0`/perf-output/"
+FPERF="`pwd`/perf-output/"
 PERF_SCRIPT_CMD="perf script"
 PERF_REPORT=""
 GREP_STRINGS=""
@@ -79,18 +79,18 @@ done
 if [ ! -e "$PERF_REPORT" ]; then
     if [ x"$PERF_REPORT" = x"" ]; then
         # if command didn't assign the perf data, go ahead to check the current folder
-        if [ -e "`dirname $0`/perf.data" ]; then
-	    PERF_REPORT="`dirname $0`/perf.data"
+        if [ -e "`pwd`/perf.data" ]; then
+	    PERF_REPORT="`pwd`/perf.data"
         else
-            echo "`dirname $0`/perf.data doesn't exist!"
+            echo "`pwd`/perf.data doesn't exist!"
             echo "Please use -i to append the perf.data"
             exit -1
         fi
     else
 	# assign the perf.data by '-i' but doesn't exist!
         echo "File doesn't exist: $PERF_REPORT!!"
-        if [ -e "`dirname $0`/perf.data" ]; then
-            echo "Do you mean the `dirname $0`/perf.data?"
+        if [ -e "`pwd`/perf.data" ]; then
+            echo "Do you mean the `pwd`/perf.data?"
         fi
         exit -1
     fi
