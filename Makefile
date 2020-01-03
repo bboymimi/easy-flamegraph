@@ -1,5 +1,5 @@
 #CP = /bin/cp
-DESTDIR = $(CURDIR)/debian/tmp
+#DESTDIR = /usr/lib/
 #EZ_CONF_DIR = /etc/ez_flamegraph/ez_conf
 EZ_LIB_DIR = /usr/lib/easy-flamegraph
 EZ_LOG_DIR = /var/log/easy-flamegraph
