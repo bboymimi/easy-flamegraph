@@ -1,6 +1,8 @@
 #CP = /bin/cp
 #DESTDIR = /usr/lib/
 #EZ_CONF_DIR = /etc/ez_flamegraph/ez_conf
+# Full path to prevent from using aliases
+CP = /bin/cp
 EZ_LIB_DIR = /usr/lib/easy-flamegraph
 EZ_LOG_DIR = /var/log/easy-flamegraph
 EZ_CRON_DIR = /etc/cron.d/
@@ -16,6 +18,8 @@ install:
 	$(INSTALL_BIN) easy-flamegraph.sh $(DESTDIR)$(EZ_LIB_DIR)
 	$(INSTALL_BIN) flamegraph-mem $(DESTDIR)$(EZ_LIB_DIR)
 	$(INSTALL_DATA) ez-flamegraph $(DESTDIR)$(EZ_CRON_DIR)
+
+	$(CP) -r ./FlameGraph/ $(DESTDIR)$(EZ_LIB_DIR)
 
 uninstall:
 	rm -f $(DESTDIR)$(EZ_CRON_DIR)/ez-flamegraph
