@@ -1,0 +1,41 @@
+# Enable all the flamegraphs in crontab profiling(/etc/cron.d/ez-flamegraph)
+# This is the switch to enable all the flamegraphs profiling(cpu/mem/io/net...).
+USE_EASY_FLAMEGRAPH=true
+
+# Specify the output directory
+EASY_FLAME_OUTPUT=/var/log/easy-flamegraph
+
+
+# By default, disable the mem profiling. The mem flamegraph will be placed under
+# /var/log/easy-flamegraph/mem/
+USE_MEM=true
+# Profile specific process
+USE_MEM_PID=
+# Set up the RSS threshold to start the memory allocation profiling
+USE_MEM_THRESHOLD_SIZE=
+# Tar the profiling result
+USE_MEM_TAR=false
+# Hook the glibc malloc
+USE_MEM_GLIBC=false
+# By default, keep the .svg only to save space
+USE_MEM_SVG=true
+# Hook the kmem
+USE_MEM_KMEM=false
+# Specify the sampling rate
+USE_MEM_SRATE=
+# Hook the tcmalloc
+USE_MEM_TCMALLOC=false
+
+
+# By default, enable the CPU profiling
+USE_CPU=true
+# By default, keep the .svg only to save space
+USE_CPU_SVG=true
+
+
+# Maybe, in the future we can develpe the IO flamegraph
+# USE_IO=false
+
+
+# Maybe, in the future we can develpe the NET flamegraph
+# USE_NET=false

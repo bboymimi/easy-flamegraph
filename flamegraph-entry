@@ -1,0 +1,53 @@
+#!/bin/bash
+
+FLAME_MEM_CMD="flamegraph-mem --oneshot"
+
+PATH=/usr/lib/easy-flamegraph:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Global Setup
+EASY_FLAMEGRAPH_DEFAULT=/etc/default/easy-flamegraph
+[ -r $EASY_FLAMEGRAPH_DEFAULT ] && . $EASY_FLAMEGRAPH_DEFAULT
+
+if ! $USE_EASY_FLAMEGRAPH; then
+	exit 0
+fi
+
+if $USE_MEM; then
+	if [ x"$EASY_FLAME_OUTPUT" != x"" ]; then
+		FLAME_MEM_CMD="$FLAME_MEM_CMD -o $EASY_FLAME_OUTPUT/mem"
+	fi
+
+	if [ x"$USE_MEM_PID" != x"" ]; then
+		FLAME_MEM_CMD="$FLAME_MEM_CMD -p $USE_MEM_PID"
+	fi
+
+	if [ x"$USE_MEM_THRESHOLD_SIZE" != x"" ]; then
+		FLAME_MEM_CMD="$FLAME_MEM_CMD -s $USE_MEM_THRESHOLD_SIZE"
+	fi
+
+	if $USE_MEM_TAR; then
+		FLAME_MEM_CMD="$FLAME_MEM_CMD -t"
+	fi
+
+	if $USE_MEM_GLIBC; then
+		FLAME_MEM_CMD="$FLAME_MEM_CMD --glibc"
+	fi
+
+	if $USE_MEM_SVG; then
+		FLAME_MEM_CMD="$FLAME_MEM_CMD --keep-svg"
+	fi
+
+	if $USE_MEM_KMEM; then
+		FLAME_MEM_CMD="$FLAME_MEM_CMD --kmem"
+	fi
+
+	if [ x"$USE_MEM_SRATE" != x"" ]; then
+		FLAME_MEM_CMD="$FLAME_MEM_CMD --sample-rate $USE_MEM_SRATE"
+	fi
+
+	if $USE_MEM_TCMALLOC; then
+		FLAME_MEM_CMD="$FLAME_MEM_CMD --tcmalloc"
+	fi
+
+	$FLAME_MEM_CMD  &
+fi
