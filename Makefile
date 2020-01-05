@@ -15,20 +15,20 @@ install:
 	mkdir -p $(DESTDIR)$(EZ_LIB_DIR)
 	mkdir -p $(DESTDIR)$(EZ_LOG_DIR)
 	mkdir -p $(DESTDIR)$(EZ_CRON_DIR)
-	mkdir -p $(EZ_DEFAULT_DIR)
+	mkdir -p $(DESTDIR)$(EZ_DEFAULT_DIR)
 
 	$(INSTALL_BIN) easy-flamegraph.sh $(DESTDIR)$(EZ_LIB_DIR)
-	$(INSTALL_BIN) flamegraph-entry $(EZ_LIB_DIR)
+	$(INSTALL_BIN) flamegraph-entry $(DESTDIR)$(EZ_LIB_DIR)
 	$(INSTALL_BIN) flamegraph-mem $(DESTDIR)$(EZ_LIB_DIR)
-	$(INSTALL_DATA) easy-flamegraph $(EZ_DEFAULT_DIR)
+	$(INSTALL_DATA) easy-flamegraph $(DESTDIR)$(EZ_DEFAULT_DIR)
 	$(INSTALL_DATA) ez-flamegraph $(DESTDIR)$(EZ_CRON_DIR)
 
 	$(CP) -r ./FlameGraph/ $(DESTDIR)$(EZ_LIB_DIR)
 
 uninstall:
 	rm -f $(DESTDIR)$(EZ_CRON_DIR)/ez-flamegraph
-	rm -f $(EZ_DEFAULT_DIR)/easy-flamegraph
+	rm -f $(DESTDIR)$(EZ_DEFAULT_DIR)/easy-flamegraph
 	rm -f $(DESTDIR)$(EZ_LIB_DIR)/easy-flamegraph.sh
 	rm -f $(DESTDIR)$(EZ_LIB_DIR)/flamegraph-mem
-	rm -f $(EZ_LIB_DIR)/flamegraph-entry
+	rm -f $(DESTDIR)$(EZ_LIB_DIR)/flamegraph-entry
 	rmdir --ignore-fail-on-non-empty $(DESTDIR)$(EZ_LIB_DIR)
