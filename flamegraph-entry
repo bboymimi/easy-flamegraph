@@ -1,6 +1,7 @@
 #!/bin/bash
 
 FLAME_MEM_CMD="flamegraph-mem --oneshot"
+FLAME_CPU_CMD="flamegraph-cpu --oneshot"
 
 PATH=/usr/lib/easy-flamegraph:/usr/sbin:/usr/bin:/sbin:/bin
 
@@ -50,4 +51,28 @@ if $USE_MEM; then
 	fi
 
 	$FLAME_MEM_CMD  &
+fi
+
+if $USE_CPU; then
+	if [ x"$EASY_FLAME_OUTPUT" != x"" ]; then
+		FLAME_CPU_CMD="$FLAME_CPU_CMD -o $EASY_FLAME_OUTPUT/cpu"
+	fi
+
+	if [ x"$USE_CPU_PID" != x"" ]; then
+		FLAME_CPU_CMD="$FLAME_CPU_CMD -p $USE_CPU_PID"
+	fi
+
+	if $USE_CPU_SVG; then
+		FLAME_CPU_CMD="$FLAME_CPU_CMD --keep-svg"
+	fi
+
+	if $USE_CPU_TAR; then
+		FLAME_CPU_CMD="$FLAME_CPU_CMD -t"
+	fi
+
+	if [ x"$USE_CPU_SRATE" != x"" ]; then
+		FLAME_CPU_CMD="$FLAME_CPU_CMD --sample-rate $USE_CPU_SRATE"
+	fi
+
+	$FLAME_CPU_CMD &
 fi

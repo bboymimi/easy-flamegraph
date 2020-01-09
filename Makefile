@@ -18,6 +18,7 @@ install:
 	mkdir -p $(DESTDIR)$(EZ_DEFAULT_DIR)
 
 	$(INSTALL_BIN) easy-flamegraph.sh $(DESTDIR)$(EZ_LIB_DIR)
+	$(INSTALL_BIN) flamegraph-cpu $(DESTDIR)$(EZ_LIB_DIR)
 	$(INSTALL_BIN) flamegraph-entry $(DESTDIR)$(EZ_LIB_DIR)
 	$(INSTALL_BIN) flamegraph-mem $(DESTDIR)$(EZ_LIB_DIR)
 	$(INSTALL_DATA) easy-flamegraph $(DESTDIR)$(EZ_DEFAULT_DIR)
@@ -31,4 +32,5 @@ uninstall:
 	rm -f $(DESTDIR)$(EZ_LIB_DIR)/easy-flamegraph.sh
 	rm -f $(DESTDIR)$(EZ_LIB_DIR)/flamegraph-mem
 	rm -f $(DESTDIR)$(EZ_LIB_DIR)/flamegraph-entry
+	rm -f $(DESTDIR)$(EZ_LIB_DIR)/flamegraph-cpu
 	rmdir --ignore-fail-on-non-empty $(DESTDIR)$(EZ_LIB_DIR)

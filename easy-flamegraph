@@ -29,9 +29,14 @@ USE_MEM_TCMALLOC=false
 
 # By default, enable the CPU profiling
 USE_CPU=true
+# Profile specific process
+USE_CPU_PID=
+# Tar the profiling result
+USE_CPU_TAR=false
 # By default, keep the .svg only to save space
 USE_CPU_SVG=true
-
+# Specify the sampling rate
+USE_CPU_SRATE=
 
 # Maybe, in the future we can develpe the IO flamegraph
 # USE_IO=false
