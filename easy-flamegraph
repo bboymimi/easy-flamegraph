@@ -8,7 +8,7 @@ EASY_FLAME_OUTPUT=/var/log/easy-flamegraph
 
 # By default, disable the mem profiling. The mem flamegraph will be placed under
 # /var/log/easy-flamegraph/mem/
-USE_MEM=true
+USE_MEM=false
 # Profile specific process
 USE_MEM_PID=
 # Set up the RSS threshold to start the memory allocation profiling
