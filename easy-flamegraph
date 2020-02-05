@@ -31,10 +31,9 @@ USE_MEM_TCMALLOC=false
 USE_CPU=true
 # Profile specific process
 USE_CPU_PID=
-# Tar the profiling result
-USE_CPU_TAR=false
 # By default, keep the .svg only to save space
-USE_CPU_SVG=true
+# There are three options: svg/tar/none
+USE_CPU_SVG=svg
 # Specify the sampling rate
 USE_CPU_SRATE=
 

@@ -62,13 +62,14 @@ if $USE_CPU; then
 		FLAME_CPU_CMD="$FLAME_CPU_CMD -p $USE_CPU_PID"
 	fi
 
-	if $USE_CPU_SVG; then
-		FLAME_CPU_CMD="$FLAME_CPU_CMD --keep-svg"
-	fi
-
-	if $USE_CPU_TAR; then
-		FLAME_CPU_CMD="$FLAME_CPU_CMD -t"
-	fi
+	case $USE_CPU_SVG in
+		tar)
+			FLAME_CPU_CMD="$FLAME_CPU_CMD -t"
+			;;
+		svg)
+			FLAME_CPU_CMD="$FLAME_CPU_CMD --keep-svg"
+			;;
+	esac
 
 	if [ x"$USE_CPU_SRATE" != x"" ]; then
 		FLAME_CPU_CMD="$FLAME_CPU_CMD --sample-rate $USE_CPU_SRATE"

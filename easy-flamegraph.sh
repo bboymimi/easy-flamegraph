@@ -67,6 +67,9 @@ do
 			usage_function
 			exit 0
 			;;
+		"")
+			shift
+			;;
 		*)
 			echo "Error!! Invalid input: $1"
 			usage_function
