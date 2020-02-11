@@ -7,8 +7,10 @@ PERF_SCRIPT_CMD="perf script"
 PERF_REPORT=""
 GREP_STRINGS=""
 KERNEL_VERSION=""
+SUBTITLE=""
 SYMFS=""
 TAR=false
+TITLE=""
 #DATE=$(date +%Y-%m-%d_%H:%M:%S)
 DATE=""
 
@@ -21,6 +23,8 @@ usage_function() {
 	    echo "	o - output directory - the output directory to save the .svg/script file"
             echo "	s - symfs - to assign the directory to search for the debug symbol of kernel modules"
             echo "	t - tar the $FPERF"
+	    echo "	title - the title of the framegraph"
+	    echo "	subtitle - the subtitle of the framegraph"
 }
 
 clean_exit() {
@@ -66,6 +70,14 @@ do
 		-h|--help)
 			usage_function
 			exit 0
+			;;
+		--subtitle)
+			SUBTITLE=$2
+			shift 2
+			;;
+		--title)
+			TITLE=$2
+			shift 2
 			;;
 		"")
 			shift
@@ -145,7 +157,7 @@ cat ${PFOLDED} >> ${PFOLDED_SUM}
 
 if [[ $GREP_STRINGS == "" ]]; then
     #cat ${PFOLDED} | ${FPATH}flamegraph.pl > ${PSVG}
-    grep -Pv 'addr2line|stackcollapse' ${PFOLDED} | ${FPATH}flamegraph.pl --color java > ${PSVG}
+    grep -Pv 'addr2line|stackcollapse' ${PFOLDED} | ${FPATH}flamegraph.pl --color java --title "${TITLE}" --subtitle "${SUBTITLE}" > ${PSVG}
 else
     # add the string name to the SVG name to identify the file easily
     PSVG="${PFOLDED}S$GREP_STRINGS.svg"
