@@ -37,6 +37,16 @@ USE_CPU_SVG=svg
 # Specify the sampling rate
 USE_CPU_SRATE=
 
+# Specifiy the threshold of CPU utilization to start to profile. The CPU
+# threshold is by default set to 25%. That means, for example, if there are 100
+# CPUs in the system, 25 CPUs are in 100 CPU utilization. Currently, the CPU
+# utilization is based on the 'Average: all' column '%idle' with command mpstat
+# to profile 1 second: "mpstat -P ON 1 1".
+#
+# WARNING! For specific CPU utlization, the implementation needs to be improved
+# to support the per-CPU utilization sampling.
+CPU_THRESHOLD=25
+
 # Maybe, in the future we can develpe the IO flamegraph
 # USE_IO=false
 

@@ -2,10 +2,13 @@
 
 APPEND_STRINGS=""
 CHK_PKG=""
+CPU_THRESHOLD=0
+CPU_UTILIZATION=
 DIGIT="^[0-9]+$"
 FPATH=`dirname $0`"/"
 FPERF="`dirname $0`/perf-output"
 GREP_STRINGS=""
+IDLE_RATE=
 KEEP_SVG=false
 KEEP_SVG_OPTION=
 ONESHOT=false
@@ -42,6 +45,8 @@ usage_function() {
 	echo "	  to profile the specific process"
 	echo "	--clean-probes - clean the probe points"
 	echo "	  clean all the inserted probe points"
+	echo "	--cpu-threshold - CPU utilization threshold"
+	echo "	  The CPU utilization threshold to start the sampling"
 	echo "	--keep-svg - clean up all the intermediate files except svg"
 	echo "	  clean up the perf intermediate files and keep on the .svg flamegraph"
 	echo "	--sample-rate - the sample rate given to perf"
@@ -71,9 +76,21 @@ perf_periodically_collect() {
 	[[ $GREP_STRINGS != "" ]] && PERF_TMP_CMD="$PERF_TMP_CMD -p `pgrep $GREP_STRINGS`"
 
 	while true; do
+		IDLE_RATE=$(mpstat -P ON 1 1| grep -P 'Average:\s+all'| perl -n -e '/Average:\s+all.+\s(\d+)\.(\d+)$/; print $1;')
+		echo IDLE_RATE:$IDLE_RATE
+		((CPU_UTILIZATION = 100 - "$IDLE_RATE"))
+		if [[ "$CPU_UTILIZATION" -lt "$CPU_THRESHOLD" ]]; then
+			echo "CPU_UTILIZATION:$CPU_UTILIZATION < CPU_THRESHOLD:$CPU_THRESHOLD !!"
+			if $ONESHOT; then
+				break;
+			fi
+			sleep 58
+			continue;
+		fi
+
 		DATE=$(date +%Y-%m-%d_%H%M%S)
 
-		PERF_DATA_FINAL=${FPERF}/${DATE}.${PERF_DATA}.${REP}
+		PERF_DATA_FINAL=${FPERF}/${DATE}.${PERF_DATA}.t${CPU_THRESHOLD}.u${CPU_UTILIZATION}.${REP}
 
 		if ! $ONESHOT; then
 		       clear
@@ -237,6 +254,10 @@ do
 		--clean-probes)
 			clean_probe_points
 			exit 0
+			;;
+		--cpu-threshold)
+			CPU_THRESHOLD=$2
+			shift 2
 			;;
 		--keep-svg)
 			KEEP_SVG=true

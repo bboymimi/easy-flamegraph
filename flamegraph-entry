@@ -75,5 +75,9 @@ if $USE_CPU; then
 		FLAME_CPU_CMD="$FLAME_CPU_CMD --sample-rate $USE_CPU_SRATE"
 	fi
 
+	if [ x"$CPU_THRESHOLD" != x"" ]; then
+		FLAME_CPU_CMD="$FLAME_CPU_CMD --cpu-threshold $CPU_THRESHOLD"
+	fi
+
 	$FLAME_CPU_CMD &
 fi
