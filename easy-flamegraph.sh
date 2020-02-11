@@ -161,7 +161,7 @@ if [[ $GREP_STRINGS == "" ]]; then
 else
     # add the string name to the SVG name to identify the file easily
     PSVG="${PFOLDED}S$GREP_STRINGS.svg"
-    egrep $GREP_STRINGS ${PFOLDED} | ${FPATH}flamegraph.pl > ${PSVG}
+    egrep $GREP_STRINGS ${PFOLDED} | ${FPATH}flamegraph.pl --color java > ${PSVG}
 fi
 
 if $TAR; then
