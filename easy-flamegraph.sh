@@ -145,7 +145,7 @@ cat ${PFOLDED} >> ${PFOLDED_SUM}
 
 if [[ $GREP_STRINGS == "" ]]; then
     #cat ${PFOLDED} | ${FPATH}flamegraph.pl > ${PSVG}
-    grep -Pv 'addr2line|stackcollapse' ${PFOLDED} | ${FPATH}flamegraph.pl --color java --title "hello world!" --subtitle "subtitle hello world!" > ${PSVG}
+    grep -Pv 'addr2line|stackcollapse' ${PFOLDED} | ${FPATH}flamegraph.pl --color java > ${PSVG}
 else
     # add the string name to the SVG name to identify the file easily
     PSVG="${PFOLDED}S$GREP_STRINGS.svg"
