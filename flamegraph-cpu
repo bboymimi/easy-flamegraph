@@ -25,7 +25,9 @@ REP=1
 RSS=""
 SLEEP_TIME="3"
 SRATE=99
+SUBTITLE=""
 TAR=false
+TITLE="CPU Utilization Framegraph"
 
 declare -A stack_array
 
@@ -108,9 +110,11 @@ perf_periodically_collect() {
 		# Profiling the system
 		$PERF_CMD &> /dev/null || break
 
+		SUBTITLE="${DATE} CPU Threshold:${CPU_THRESHOLD}% CPU Utilization:${CPU_UTILIZATION}%"
 		(
 			# Generate the flamegraph
-			"${FPATH}"/easy-flamegraph.sh -i "$PERF_DATA_FINAL" "$KEEP_SVG_OPTION" -o "$FPERF" &> /dev/null
+			"${FPATH}"/easy-flamegraph.sh -i "$PERF_DATA_FINAL" "$KEEP_SVG_OPTION" -o "$FPERF" \
+			       --title "${TITLE}" --subtitle "${SUBTITLE}" &> /dev/null
 
 			# clean up the perf.data
 			if $KEEP_SVG; then
@@ -138,7 +142,8 @@ perf_periodically_collect() {
 	if ! $ONESHOT; then
 		(
 			# Generate the flamegraph
-			"${FPATH}"/easy-flamegraph.sh -i $PERF_DATA_FINAL $KEEP_SVG_OPTION -o "$FPERF" &> /dev/null
+			"${FPATH}"/easy-flamegraph.sh -i $PERF_DATA_FINAL $KEEP_SVG_OPTION -o "$FPERF" \
+			       --title "${TITLE}" --subtitle "${SUBTITLE}" &> /dev/null
 
 			# clean up the perf.data
 			if $KEEP_SVG; then
