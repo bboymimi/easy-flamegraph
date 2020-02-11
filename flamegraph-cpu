@@ -56,9 +56,9 @@ usage_function() {
 
 required_tools_checking() {
 
-	# return 1 if linux-tools-generic is installed, else return 0
-	CHK_PKG=$(dpkg-query -W -f='${Status}' linux-tools-common 2>/dev/null | grep -c "ok installed")
-	[ $CHK_PKG -eq 0 ] && apt-get install -y linux-tools-common
+	# return 1 if the specified package is installed, else return 0
+	CHK_PKG=$(dpkg-query -W -f='${Status}' $1 2>/dev/null | grep -c "ok installed")
+	[ $CHK_PKG -eq 0 ] && apt-get install -y $1
 }
 
 clean_probe_points() {
@@ -300,7 +300,8 @@ mkdir -p $FPERF
 trap "exit_work" EXIT
 
 # check if the required tool(s) is installed. e.g. linux-tools-common.
-required_tools_checking
+required_tools_checking linux-tools-common
+required_tools_checking sysstat
 
 # clean the probe point before adding the new probe point
 clean_probe_points
