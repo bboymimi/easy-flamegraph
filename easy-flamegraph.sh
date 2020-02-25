@@ -127,6 +127,12 @@ generate_per_cpu_flamegraph() {
 		__generate_flamegraph "$PCPUSCRIPT" "${TITLE}" "${SUBTITLE} - cpu $i" "${PCPUSVG}" "${PCPUFOLDED}"
 	done
 
+	# Use the following instructions to verify the correctness
+	# $ grep -Pn '.+\s+\d+\s+\[\d+\] \d+\.\d+:\s+\d+\scycles:\s+' perf-output/perf.datacpu00*script | wc -l
+	# 3968
+	# $ grep -Pn '.+\s+\d+\s+\[\d+\] \d+\.\d+:\s+\d+\scycles:\s+' perf-output/perf.data.script | wc -l
+	# 3968
+
 }
 
 generate_flamegraph() {
