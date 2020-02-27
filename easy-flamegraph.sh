@@ -7,6 +7,7 @@ PERF_SCRIPT_CMD="perf script"
 PERF_REPORT=""
 GREP_STRINGS=""
 KERNEL_VERSION=""
+MAXCPUNR=0
 PER_CPU_FLAMEGRAPH=false
 SUBTITLE=""
 SYMFS=""
@@ -60,7 +61,6 @@ generate_per_cpu_flamegraph() {
 	local PCPUSCRIPT
 	local PCPUFOLDED
 	local PCPUSVG
-	local MAXCPUNR=0
 	# Associative array is local when it's declared inside the function
 	declare -A cpu_array
 
@@ -83,7 +83,7 @@ generate_per_cpu_flamegraph() {
 
 		if [ $CURRENT_LINE_NR -ne $PREV_LINE_NR ]; then
 			((CURRENT_LINE_NR = $CURRENT_LINE_NR - 1))
-			PCPUSCRIPT="${FPERF}`basename ${PERF_REPORT}`cpu${PREV_CPU_NR}.script"
+			PCPUSCRIPT="${FPERF}`basename ${PERF_REPORT}`.cpu${PREV_CPU_NR}.script"
 
 			# Remove the previous script to avoid reuse the previous data
 			if [ "${cpu_array[$PREV_CPU_NR]}"x == ""x ]; then
@@ -118,7 +118,7 @@ generate_per_cpu_flamegraph() {
 	# echo $CURRENT_LINE_NR
 	# Check the empty file condition that the while loop is skipped
 	if [ $PREV_LINE_NR -lt $CURRENT_LINE_NR ] ; then
-			PCPUSCRIPT="${FPERF}`basename ${PERF_REPORT}`cpu${PREV_CPU_NR}.script"
+			PCPUSCRIPT="${FPERF}`basename ${PERF_REPORT}`.cpu${PREV_CPU_NR}.script"
 
 			# Remove the previous script to avoid reuse the previous data
 			if [ "$cpu_array[$PREV_CPU_NR]"x == ""x ]; then
@@ -133,9 +133,9 @@ generate_per_cpu_flamegraph() {
 
 	# Finally, generate the flamegraph
 	for ((i = 0; i <= $MAXCPUNR; i++)); do
-		PCPUSCRIPT="${FPERF}`basename ${PERF_REPORT}`$(printf cpu%03d $i).script"
-		PCPUFOLDED="${FPERF}`basename ${PERF_REPORT}`$(printf cpu%03d $i).folded"
-		PCPUSVG="${FPERF}`basename ${PERF_REPORT}`$(printf cpu%03d $i).svg"
+		PCPUSCRIPT="${FPERF}`basename ${PERF_REPORT}`$(printf .cpu%03d $i).script"
+		PCPUFOLDED="${FPERF}`basename ${PERF_REPORT}`$(printf .cpu%03d $i).folded"
+		PCPUSVG="${FPERF}`basename ${PERF_REPORT}`$(printf .cpu%03d $i).svg"
 
 		__generate_flamegraph "$PCPUSCRIPT" "${TITLE}" "${SUBTITLE} - cpu $i" "${PCPUSVG}" "${PCPUFOLDED}"
 	done
@@ -306,7 +306,10 @@ generate_flamegraph
 
 echo "###########"
 if ! $TAR; then
-	echo "# The perf interactive .svg graph \"${PSVG}\" has been generated."
+	echo "# The whole system perf interactive .svg graph \"${PSVG}\" has been generated."
+	if $PER_CPU_FLAMEGRAPH; then
+		echo "# The per-cpu flamegraph : "${FPERF}`basename ${PERF_REPORT}`.cpu[000-$(printf %03d $MAXCPUNR)].svg""
+	fi
 	echo "#"
 	echo "# The FlameGraph can be viewed by:"
 	echo "# $ google-chrome-stable ${PSVG}"
@@ -315,5 +318,8 @@ if ! $TAR; then
 	echo "#"
 else
 	echo "# The intermediate files are in: "${FPERF}`basename ${PERF_REPORT}`".zip"
+	if $PER_CPU_FLAMEGRAPH; then
+		echo "# The per-cpu flamegraph are also included: "`basename ${PERF_REPORT}`.cpu[000-$(printf %03d $MAXCPUNR)].svg""
+	fi
 fi
 echo "###########"
