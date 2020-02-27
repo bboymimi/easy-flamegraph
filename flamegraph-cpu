@@ -117,7 +117,7 @@ perf_periodically_collect() {
 		(
 			# Generate the flamegraph
 			"${FPATH}"/easy-flamegraph.sh -i "$PERF_DATA_FINAL" "$KEEP_SVG_OPTION" -o "$FPERF" \
-			       --title "${TITLE}" --subtitle "${SUBTITLE}" &> /dev/null
+			       --title "${TITLE}" --subtitle "${SUBTITLE}" "$PER_CPU_FLAMEGRAPH" &> /dev/null
 
 			# clean up the perf.data
 			if $KEEP_SVG; then
@@ -146,7 +146,7 @@ perf_periodically_collect() {
 		(
 			# Generate the flamegraph
 			"${FPATH}"/easy-flamegraph.sh -i $PERF_DATA_FINAL $KEEP_SVG_OPTION -o "$FPERF" \
-			       --title "${TITLE}" --subtitle "${SUBTITLE}" &> /dev/null
+			       --title "${TITLE}" --subtitle "${SUBTITLE}" "$PER_CPU_FLAMEGRAPH" &> /dev/null
 
 			# clean up the perf.data
 			if $KEEP_SVG; then
