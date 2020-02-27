@@ -71,12 +71,16 @@ if $USE_CPU; then
 			;;
 	esac
 
+	if [ x"$CPU_THRESHOLD" != x"" ]; then
+		FLAME_CPU_CMD="$FLAME_CPU_CMD --cpu-threshold $CPU_THRESHOLD"
+	fi
+
 	if [ x"$USE_CPU_SRATE" != x"" ]; then
 		FLAME_CPU_CMD="$FLAME_CPU_CMD --sample-rate $USE_CPU_SRATE"
 	fi
 
-	if [ x"$CPU_THRESHOLD" != x"" ]; then
-		FLAME_CPU_CMD="$FLAME_CPU_CMD --cpu-threshold $CPU_THRESHOLD"
+	if $PER_CPU_FLAMEGRAPH; then
+		FLAME_CPU_CMD="$FLAME_CPU_CMD --per-cpu-flamegraph"
 	fi
 
 	$FLAME_CPU_CMD &

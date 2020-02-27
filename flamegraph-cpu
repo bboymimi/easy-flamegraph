@@ -12,6 +12,7 @@ IDLE_RATE=
 KEEP_SVG=false
 KEEP_SVG_OPTION=
 ONESHOT=false
+PER_CPU_FLAMEGRAPH=
 PERF_CMD=""
 PERF_DATA="perf.cpu"
 PERF_DATA_FINAL=""
@@ -51,6 +52,8 @@ usage_function() {
 	echo "	  The CPU utilization threshold to start the sampling"
 	echo "	--keep-svg - clean up all the intermediate files except svg"
 	echo "	  clean up the perf intermediate files and keep on the .svg flamegraph"
+	echo "	--per-cpu-flamegraph - generate the per-cpu flamegraph"
+	echo "	  Generate the per-cpu flamegraph from the perf script result"
 	echo "	--sample-rate - the sample rate given to perf"
 	echo "	  the default sample rate given to 'perf record -F xxx'. It's 99 by default to"
 	echo "	  minimize the data size. The size is limited by /proc/sys/kernel/perf_event_max_sample_rate"
@@ -267,6 +270,10 @@ do
 		--keep-svg)
 			KEEP_SVG=true
 			KEEP_SVG_OPTION="-d"
+			shift
+			;;
+		--per-cpu-flamegraph)
+			PER_CPU_FLAMEGRAPH="--per-cpu-flamegraph"
 			shift
 			;;
 		--oneshot)

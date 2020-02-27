@@ -31,6 +31,8 @@ USE_MEM_TCMALLOC=false
 USE_CPU=true
 # Profile specific process
 USE_CPU_PID=
+# Generate the per-cpu flamegraph
+PER_CPU_FLAMEGRAPH=false
 # By default, keep the .svg only to save space
 # There are three options: svg/tar/none
 USE_CPU_SVG=svg
