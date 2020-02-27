@@ -24,9 +24,11 @@ install:
 	$(INSTALL_DATA) easy-flamegraph $(DESTDIR)$(EZ_DEFAULT_DIR)
 	$(INSTALL_DATA) ez-flamegraph $(DESTDIR)$(EZ_CRON_DIR)
 
+	git submodule update --init FlameGraph
 	$(CP) -r ./FlameGraph/ $(DESTDIR)$(EZ_LIB_DIR)
 
 uninstall:
+	rm -rf $(DESTDIR)$(EZ_LIB_DIR)/FlameGraph/
 	rm -f $(DESTDIR)$(EZ_CRON_DIR)/ez-flamegraph
 	rm -f $(DESTDIR)$(EZ_DEFAULT_DIR)/easy-flamegraph
 	rm -f $(DESTDIR)$(EZ_LIB_DIR)/easy-flamegraph.sh
