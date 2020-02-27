@@ -30,11 +30,22 @@ __generate_flamegraph() {
 	    egrep $GREP_STRINGS $5 | ${FPATH}flamegraph.pl --color java --title "$2" --subtitle "$3" > $4
 	fi
 
-	if $TAR; then
-	    zip -u "${FPERF}`basename ${PERF_REPORT}`".zip "$1" "$5" "$4"
-	    # echo "# The perf-related file: \""${PSCRIPT}" "${PFOLDED}" "${PSVG}"\" has been tared."
-	    rm "$1" "$5" "$4"
-	    # echo "# Delete the related perf report files:" "${PSCRIPT}" "${PFOLDED}" "${PSVG}"
+	if $DROP_PERF_DATA; then
+		[ -e "$5" ] && rm "$5" # remove the $PFOLDED
+		[ -e "$1" ] && rm "$1" # remove the $PSCRIPT
+
+		if $TAR; then
+			zip -u "${FPERF}`basename ${PERF_REPORT}`".zip "$4" # zip only the .svg
+			[ -e "$4" ] && rm "$4" # remove the $PFOLDED
+		fi
+	else
+		# If not keep only the .svg file, we need to zip all the intermediate files
+		if $TAR; then
+		    zip -u "${FPERF}`basename ${PERF_REPORT}`".zip "$1" "$5" "$4"
+		    # echo "# The perf-related file: \""${PSCRIPT}" "${PFOLDED}" "${PSVG}"\" has been tared."
+		    rm "$1" "$5" "$4"
+		    # echo "# Delete the related perf report files:" "${PSCRIPT}" "${PFOLDED}" "${PSVG}"
+		fi
 	fi
 
 }
@@ -74,10 +85,11 @@ generate_per_cpu_flamegraph() {
 			((CURRENT_LINE_NR = $CURRENT_LINE_NR - 1))
 			PCPUSCRIPT="${FPERF}`basename ${PERF_REPORT}`cpu${PREV_CPU_NR}.script"
 
+			# Remove the previous script to avoid reuse the previous data
 			if [ "${cpu_array[$PREV_CPU_NR]}"x == ""x ]; then
 				# echo PREV_CPU_NR:$PREV_CPU_NR in if
 				# echo cpu_array[PREV_CPU_NR]:${cpu_array[PREV_CPU_NR]} in if
-				rm $PCPUSCRIPT
+				[ -e "$PCPUSCRIPT" ] && rm "$PCPUSCRIPT" && echo remove the existing "$PCPUSCRIPT"!
 			fi
 
 			#echo PREV_CPU_NR:$PREV_CPU_NR in else
@@ -108,8 +120,9 @@ generate_per_cpu_flamegraph() {
 	if [ $PREV_LINE_NR -lt $CURRENT_LINE_NR ] ; then
 			PCPUSCRIPT="${FPERF}`basename ${PERF_REPORT}`cpu${PREV_CPU_NR}.script"
 
+			# Remove the previous script to avoid reuse the previous data
 			if [ "$cpu_array[$PREV_CPU_NR]"x == ""x ]; then
-				rm $PCPUSCRIPT
+				[ -e "$PCPUSCRIPT" ] && rm "$PCPUSCRIPT" && echo remove the existing "$PCPUSCRIPT"!
 			fi
 
 			cpu_array[$PREV_CPU_NR]=$((${cpu_array[$PREV_CPU_NR]}+1))
@@ -137,12 +150,12 @@ generate_per_cpu_flamegraph() {
 
 generate_flamegraph() {
 
-	# Always generate the *WHOLE* system flamegraph
-	__generate_flamegraph "${PSCRIPT}" "${TITLE}" "${SUBTITLE}" "${PSVG}" "${PFOLDED}"
-
 	if $PER_CPU_FLAMEGRAPH; then
 		generate_per_cpu_flamegraph "${PSCRIPT}"
 	fi
+
+	# Always generate the *WHOLE* system flamegraph
+	__generate_flamegraph "${PSCRIPT}" "${TITLE}" "${SUBTITLE}" "${PSVG}" "${PFOLDED}"
 
 }
 
@@ -161,12 +174,8 @@ usage_function() {
 }
 
 clean_exit() {
-
-	if $DROP_PERF_DATA; then
-		[ -e "${PFOLDED}" ] && rm "${PFOLDED}"
-		[ -e "${PSCRIPT}" ] && rm "${PSCRIPT}"
-	fi
-
+	# nothing to do
+	echo
 }
 
 while (($# > 0))
@@ -272,6 +281,13 @@ PFOLDED_SUM="${FPERF}stack_sum"
 
 # mkdir the folder to store the perf report data
 mkdir -p ${FPERF}
+
+# rm the zip file if it alreadys exists
+if "$DROP_PERF_DATA"; then
+	[ -e "${FPERF}`basename ${PERF_REPORT}`".zip ] && rm "${FPERF}`basename ${PERF_REPORT}`".zip && {
+		echo Remove the existing "${FPERF}`basename ${PERF_REPORT}`".zip!
+	}
+fi
 
 # perf script -i ./perf-110417_201609 -k ~/ddebs/ddebs-4.4.0-53.74/usr/lib/debug/boot/vmlinux-4.4.0-53-generic > perf-110417_201609.perf
 [[ $PERF_REPORT != "" ]] && PERF_SCRIPT_CMD="${PERF_SCRIPT_CMD} -i $PERF_REPORT"
