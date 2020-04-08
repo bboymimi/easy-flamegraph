@@ -2,6 +2,7 @@
 
 FLAME_MEM_CMD="flamegraph-mem --oneshot"
 FLAME_CPU_CMD="flamegraph-cpu --oneshot"
+FLAME_IO_CMD="flamegraph-io --oneshot"
 
 PATH=/usr/lib/easy-flamegraph:/usr/sbin:/usr/bin:/sbin:/bin
 
@@ -84,4 +85,41 @@ if $USE_CPU; then
 	fi
 
 	$FLAME_CPU_CMD &
+fi
+
+if $USE_IO; then
+	if [ x"$EASY_FLAME_OUTPUT" != x"" ]; then
+		FLAME_IO_CMD="$FLAME_IO_CMD -o $EASY_FLAME_OUTPUT/io"
+	fi
+
+	if [ x"$USE_IO_PID" != x"" ]; then
+		FLAME_IO_CMD="$FLAME_IO_CMD -p $USE_IO_PID"
+	fi
+
+	case $USE_IO_SVG in
+		tar)
+			FLAME_IO_CMD="$FLAME_IO_CMD -t"
+			;;
+		svg)
+			FLAME_IO_CMD="$FLAME_IO_CMD --keep-svg"
+			;;
+	esac
+
+	if [ x"$USE_IO_DISK" != x"" ]; then
+		FLAME_IO_CMD="$FLAME_IO_CMD --disk $USE_IO_DISK"
+	fi
+
+	if [ x"$READ_THRESHOLD" != x"" ]; then
+		FLAME_IO_CMD="$FLAME_IO_CMD --read-threshold $READ_THRESHOLD"
+	fi
+
+	if [ x"$WRITE_THRESHOLD" != x"" ]; then
+		FLAME_IO_CMD="$FLAME_IO_CMD --write-threshold $WRITE_THRESHOLD"
+	fi
+
+	if [ x"$USE_IO_SRATE" != x"" ]; then
+		FLAME_IO_CMD="$FLAME_IO_CMD --sample-rate $USE_IO_SRATE"
+	fi
+
+	$FLAME_IO_CMD &
 fi

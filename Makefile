@@ -21,6 +21,7 @@ install:
 	$(INSTALL_BIN) flamegraph-cpu $(DESTDIR)$(EZ_LIB_DIR)
 	$(INSTALL_BIN) flamegraph-entry $(DESTDIR)$(EZ_LIB_DIR)
 	$(INSTALL_BIN) flamegraph-mem $(DESTDIR)$(EZ_LIB_DIR)
+	$(INSTALL_BIN) flamegraph-io $(DESTDIR)$(EZ_LIB_DIR)
 	$(INSTALL_DATA) easy-flamegraph $(DESTDIR)$(EZ_DEFAULT_DIR)
 	$(INSTALL_DATA) ez-flamegraph $(DESTDIR)$(EZ_CRON_DIR)
 
@@ -32,6 +33,7 @@ uninstall:
 	rm -f $(DESTDIR)$(EZ_CRON_DIR)/ez-flamegraph
 	rm -f $(DESTDIR)$(EZ_DEFAULT_DIR)/easy-flamegraph
 	rm -f $(DESTDIR)$(EZ_LIB_DIR)/easy-flamegraph.sh
+	rm -f $(DESTDIR)$(EZ_LIB_DIR)/flamegraph-io
 	rm -f $(DESTDIR)$(EZ_LIB_DIR)/flamegraph-mem
 	rm -f $(DESTDIR)$(EZ_LIB_DIR)/flamegraph-entry
 	rm -f $(DESTDIR)$(EZ_LIB_DIR)/flamegraph-cpu

@@ -49,9 +49,21 @@ USE_CPU_SRATE=
 # to support the per-CPU utilization sampling.
 CPU_THRESHOLD=25
 
-# Maybe, in the future we can develpe the IO flamegraph
-# USE_IO=false
-
+# IO flamegraph
+USE_IO=false
+# Process to monitor, empty to monitor whole system
+USE_IO_PID=
+# Threshold, conditions to trigger perf record
+# Which disks to minitor
+USE_IO_DISK=sda
+# If IO exceeds this threshold(KB)
+READ_THRESHOLD=
+WRITE_THRESHOLD=10000
+# By default, keep the .svg only to save space
+# There are three options: svg/tar/none
+USE_IO_SVG=svg
+# Specify the sampling rate
+USE_IO_SRATE=
 
 # Maybe, in the future we can develpe the NET flamegraph
 # USE_NET=false
