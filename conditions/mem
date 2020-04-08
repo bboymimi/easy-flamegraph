@@ -1,5 +1,24 @@
 #!/bin/bash
 
+# Config file
+EASY_FLAMEGRAPH_DEFAULT=/etc/default/easy-flamegraph.conf
+
+[ -r $EASY_FLAMEGRAPH_DEFAULT ] && . $EASY_FLAMEGRAPH_DEFAULT
+
+if ! $USE_EASY_FLAMEGRAPH; then
+	exit 0
+fi
+
+# source lib
+[ -r "$EASY_FLAME_LIB_DIR"/lib ] && . "$EASY_FLAME_LIB_DIR"/lib
+
+if ! "$USE_MEM"; then
+	debug_log "USE_MEM: disabled"
+	exit 0
+fi
+
+debug_log "USE_MEM: enabled"
+
 APPEND_STRINGS=""
 CHK_PKG=""
 DIGIT="^[0-9]+$"

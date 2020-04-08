@@ -1,8 +1,8 @@
 #!/bin/bash
 
-FPATH="`dirname $0`/FlameGraph/"
+FPATH="$(dirname "$0")/FlameGraph/"
 DROP_PERF_DATA=false
-FPERF="`pwd`/perf-output/"
+FPERF="$(pwd)/perf-output/"
 PERF_SCRIPT_CMD="perf script"
 PERF_REPORT=""
 GREP_STRINGS=""
@@ -13,22 +13,20 @@ SUBTITLE=""
 SYMFS=""
 TAR=false
 TITLE=""
-#DATE=$(date +%Y-%m-%d_%H:%M:%S)
-DATE=""
 
 # $1:$PSCRIPT $2:$TITLE $3:$SUBTITLE $4:$PSVG $5:$PFOLDED
 __generate_flamegraph() {
 
 	# extract the call stack for the flamegraph.pl to generate the svg interactive graph
-	${FPATH}stackcollapse-perf.pl --all $1 > $5
+	"${FPATH}"stackcollapse-perf.pl --all "$1" > "$5"
 
 	if [[ $GREP_STRINGS == "" ]]; then
 	    #cat ${PFOLDED} | ${FPATH}flamegraph.pl > ${PSVG}
-	    grep -Pv 'addr2line|stackcollapse' $5 | ${FPATH}flamegraph.pl --color java --title "$2" --subtitle "$3" > $4
+	    grep -Pv 'addr2line|stackcollapse' "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$3" > "$4"
 	else
 	    # add the string name to the SVG name to identify the file easily
 	    PSVG="$5S$GREP_STRINGS.svg"
-	    egrep $GREP_STRINGS $5 | ${FPATH}flamegraph.pl --color java --title "$2" --subtitle "$3" > $4
+	    grep -E "$GREP_STRINGS" "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$3" > "$4"
 	fi
 
 	if $DROP_PERF_DATA; then
@@ -36,13 +34,13 @@ __generate_flamegraph() {
 		[ -e "$1" ] && rm "$1" # remove the $PSCRIPT
 
 		if $TAR; then
-			zip -u "${FPERF}`basename ${PERF_REPORT}`".zip "$4" # zip only the .svg
+			zip -u "${FPERF}$(basename "$PERF_REPORT")".zip "$4" # zip only the .svg
 			[ -e "$4" ] && rm "$4" # remove the $PFOLDED
 		fi
 	else
 		# If not keep only the .svg file, we need to zip all the intermediate files
 		if $TAR; then
-		    zip -u "${FPERF}`basename ${PERF_REPORT}`".zip "$1" "$5" "$4"
+			zip -u "${FPERF}$(basename "$PERF_REPORT")".zip "$1" "$5" "$4"
 		    # echo "# The perf-related file: \""${PSCRIPT}" "${PFOLDED}" "${PSVG}"\" has been tared."
 		    rm "$1" "$5" "$4"
 		    # echo "# Delete the related perf report files:" "${PSCRIPT}" "${PFOLDED}" "${PSVG}"
@@ -73,17 +71,17 @@ generate_per_cpu_flamegraph() {
 		# echo $i
 
 		# Parse the current line number
-		CURRENT_LINE_NR=$(echo $i |grep -Po '^\d+')
+		CURRENT_LINE_NR=$(echo "$i" |grep -Po '^\d+')
 
-		if [ $CURRENT_LINE_NR = "" ]; then
+		if [ "$CURRENT_LINE_NR" = "" ]; then
 			continue
 		fi
 
 		# echo LINE:$CURRENT_LINE_NR
 
-		if [ $CURRENT_LINE_NR -ne $PREV_LINE_NR ]; then
-			((CURRENT_LINE_NR = $CURRENT_LINE_NR - 1))
-			PCPUSCRIPT="${FPERF}`basename ${PERF_REPORT}`.cpu${PREV_CPU_NR}.script"
+		if [ "$CURRENT_LINE_NR" -ne "$PREV_LINE_NR" ]; then
+			((CURRENT_LINE_NR = CURRENT_LINE_NR - 1))
+			PCPUSCRIPT="${FPERF}$(basename "$PERF_REPORT").cpu${PREV_CPU_NR}.script"
 
 			# Remove the previous script to avoid reuse the previous data
 			if [ "${cpu_array[$PREV_CPU_NR]}"x == ""x ]; then
@@ -96,46 +94,46 @@ generate_per_cpu_flamegraph() {
 			#echo cpu_array[PREV_CPU_NR]:$PREV_CPU_NR in else
 			cpu_array[$PREV_CPU_NR]=$((${cpu_array[$PREV_CPU_NR]}+1))
 
-			sed -n "$PREV_LINE_NR,${CURRENT_LINE_NR}p" $FILE >> ${PCPUSCRIPT}
+			sed -n "$PREV_LINE_NR,${CURRENT_LINE_NR}p" "$FILE" >> "$PCPUSCRIPT"
 			# echo "$PREV_LINE_NR,${CURRENT_LINE_NR}p $FILE >> ${PCPUSCRIPT}"
 		fi
 
 		PREV_LINE_NR=$CURRENT_LINE_NR
 
 		# Parse the CPU number of the callstack
-		PREV_CPU_NR=$(echo $i| perl -n -e '/\[(\d+)\]/; print $1')
+		PREV_CPU_NR=$(echo "$i" | perl -n -e '/\[(\d+)\]/; print $1')
 		# echo CPU_NR:$PREV_CPU_NR
 
-		if (($PREV_CPU_NR > $MAXCPUNR)); then
-			MAXCPUNR=$PREV_CPU_NR
+		if ((PREV_CPU_NR > MAXCPUNR)); then
+			MAXCPUNR="$PREV_CPU_NR"
 		fi
 
-	done <<< "$(grep -Pn '.+\s+\d+\s+\[\d+\] \d+\.\d+:\s+\d+\scycles:\s+' $FILE)"
+	done <<< "$(grep -Pn '.+\s+\d+\s+\[\d+\] \d+\.\d+:\s+\d+\scycles:\s+' "$FILE")"
 
 	# This is the case to handle the last callstack and try to get the last line
-	CURRENT_LINE_NR=$(wc -l $FILE| awk '{print $1}')
+	CURRENT_LINE_NR=$(wc -l "$FILE" | awk '{print $1}')
 
 	# echo $CURRENT_LINE_NR
 	# Check the empty file condition that the while loop is skipped
-	if [ $PREV_LINE_NR -lt $CURRENT_LINE_NR ] ; then
-			PCPUSCRIPT="${FPERF}`basename ${PERF_REPORT}`.cpu${PREV_CPU_NR}.script"
+	if [ "$PREV_LINE_NR" -lt "$CURRENT_LINE_NR" ] ; then
+		PCPUSCRIPT="${FPERF}$(basename "$PERF_REPORT").cpu${PREV_CPU_NR}.script"
 
 			# Remove the previous script to avoid reuse the previous data
-			if [ "$cpu_array[$PREV_CPU_NR]"x == ""x ]; then
+			if [ "${cpu_array[$PREV_CPU_NR]}"x == ""x ]; then
 				[ -e "$PCPUSCRIPT" ] && rm "$PCPUSCRIPT" && echo remove the existing "$PCPUSCRIPT"!
 			fi
 
 			cpu_array[$PREV_CPU_NR]=$((${cpu_array[$PREV_CPU_NR]}+1))
 
-			sed -n "$PREV_LINE_NR,${CURRENT_LINE_NR}p" $FILE >> ${PCPUSCRIPT}
+			sed -n "$PREV_LINE_NR,${CURRENT_LINE_NR}p" "$FILE" >> "$PCPUSCRIPT"
 			# echo "$PREV_LINE_NR,${CURRENT_LINE_NR}p $FILE >> ${1}.cpu${PREV_CPU_NR}"
 	fi
 
 	# Finally, generate the flamegraph
-	for ((i = 0; i <= $MAXCPUNR; i++)); do
-		PCPUSCRIPT="${FPERF}`basename ${PERF_REPORT}`$(printf .cpu%03d $i).script"
-		PCPUFOLDED="${FPERF}`basename ${PERF_REPORT}`$(printf .cpu%03d $i).folded"
-		PCPUSVG="${FPERF}`basename ${PERF_REPORT}`$(printf .cpu%03d $i).svg"
+	for ((i = 0; i <= MAXCPUNR; i++)); do
+		PCPUSCRIPT="${FPERF}$(basename "$PERF_REPORT")$(printf .cpu%03d "$i").script"
+		PCPUFOLDED="${FPERF}$(basename "$PERF_REPORT")$(printf .cpu%03d "$i").folded"
+		PCPUSVG="${FPERF}$(basename "$PERF_REPORT")$(printf .cpu%03d "$i").svg"
 
 		__generate_flamegraph "$PCPUSCRIPT" "${TITLE}" "${SUBTITLE} - cpu $i" "${PCPUSVG}" "${PCPUFOLDED}"
 	done
@@ -213,9 +211,9 @@ do
 			usage_function
 			exit 0
 			;;
-		--per-cpu-flamegraph)
-			PER_CPU_FLAMEGRAPH=true
-			shift
+		-p)
+			PER_CPU_FLAMEGRAPH=$2
+			shift 2
 			;;
 		--subtitle)
 			SUBTITLE=$2
@@ -240,30 +238,30 @@ done
 if [ ! -e "$PERF_REPORT" ]; then
     if [ x"$PERF_REPORT" = x"" ]; then
         # if command didn't assign the perf data, go ahead to check the current folder
-        if [ -e "`pwd`/perf.data" ]; then
-	    PERF_REPORT="`pwd`/perf.data"
+	if [ -e "$(pwd)/perf.data" ]; then
+		PERF_REPORT="$(pwd)/perf.data"
         else
-            echo "`pwd`/perf.data doesn't exist!"
+		echo "$(pwd)/perf.data doesn't exist!"
             echo "Please use -i to append the perf.data"
-            exit -1
+            exit 1
         fi
     else
 	# assign the perf.data by '-i' but doesn't exist!
         echo "File doesn't exist: $PERF_REPORT!!"
-        if [ -e "`pwd`/perf.data" ]; then
-            echo "Do you mean the `pwd`/perf.data?"
+	if [ -e "$(pwd)/perf.data" ]; then
+		echo "Do you mean the $(pwd)/perf.data?"
         fi
-        exit -1
+        exit 1
     fi
 fi
 
 echo "Use the $PERF_REPORT as the source of the FlameGraph."
 
 # check if the $PERF_REPORT is readable
-if [ ! -r $PERF_REPORT ]; then
+if [ ! -r "$PERF_REPORT" ]; then
     echo "Permission denied: $PERF_REPORT cannot be read."
     echo "Try: \"sudo chmod a+r $PERF_REPORT\""
-    exit -1
+    exit 1
 fi
 
 # Try to clone the FlameGraph if it doesn't exist.
@@ -274,18 +272,18 @@ if [ -z "$(ls -A "$FPATH")" ]; then
     git submodule update --init FlameGraph
 fi
 
-PSCRIPT="${FPERF}`basename ${PERF_REPORT}`.script"
-PFOLDED="${FPERF}`basename ${PERF_REPORT}`.folded"
-PSVG="${FPERF}`basename ${PERF_REPORT}`.svg"
+PSCRIPT="${FPERF}$(basename "$PERF_REPORT").script"
+PFOLDED="${FPERF}$(basename "$PERF_REPORT").folded"
+PSVG="${FPERF}$(basename "$PERF_REPORT").svg"
 PFOLDED_SUM="${FPERF}stack_sum"
 
 # mkdir the folder to store the perf report data
-mkdir -p ${FPERF}
+mkdir -p "$FPERF"
 
 # rm the zip file if it alreadys exists
 if "$DROP_PERF_DATA"; then
-	[ -e "${FPERF}`basename ${PERF_REPORT}`".zip ] && rm "${FPERF}`basename ${PERF_REPORT}`".zip && {
-		echo Remove the existing "${FPERF}`basename ${PERF_REPORT}`".zip!
+	[ -e "${FPERF}$(basename "$PERF_REPORT")".zip ] && rm "${FPERF}$(basename "$PERF_REPORT")".zip && {
+		echo "Remove the existing ${FPERF}$(basename "$PERF_REPORT").zip!"
 	}
 fi
 
@@ -298,9 +296,9 @@ fi
 trap "clean_exit" EXIT
 
 # generate the perf script file for the stackcollapse to extract the call stack
-${PERF_SCRIPT_CMD} > ${PSCRIPT}
+"$PERF_SCRIPT_CMD" > "$PSCRIPT"
 
-[ ! -s ${PSCRIPT} ] && echo "No perf data captured!"  && exit
+[ ! -s "$PSCRIPT" ] && echo "No perf data captured!"  && exit
 
 generate_flamegraph
 
@@ -308,7 +306,7 @@ echo "###########"
 if ! $TAR; then
 	echo "# The whole system perf interactive .svg graph \"${PSVG}\" has been generated."
 	if $PER_CPU_FLAMEGRAPH; then
-		echo "# The per-cpu flamegraph : "${FPERF}`basename ${PERF_REPORT}`.cpu[000-$(printf %03d $MAXCPUNR)].svg""
+		echo "# The per-cpu flamegraph : ${FPERF}$(basename "$PERF_REPORT").cpu[000-$(printf %03d "$MAXCPUNR")].svg"
 	fi
 	echo "#"
 	echo "# The FlameGraph can be viewed by:"
@@ -317,9 +315,9 @@ if ! $TAR; then
 	echo "# $ firefox ${PSVG}"
 	echo "#"
 else
-	echo "# The intermediate files are in: "${FPERF}`basename ${PERF_REPORT}`".zip"
+	echo "# The intermediate files are in: ${FPERF}$(basename "$PERF_REPORT").zip"
 	if $PER_CPU_FLAMEGRAPH; then
-		echo "# The per-cpu flamegraph are also included: "`basename ${PERF_REPORT}`.cpu[000-$(printf %03d $MAXCPUNR)].svg""
+		echo "# The per-cpu flamegraph are also included: $(basename "$PERF_REPORT").cpu[000-$(printf %03d "$MAXCPUNR")].svg"
 	fi
 fi
 echo "###########"

@@ -1,18 +1,41 @@
 #!/bin/bash
 
-FLAME_MEM_CMD="flamegraph-mem --oneshot"
-FLAME_CPU_CMD="flamegraph-cpu --oneshot"
-FLAME_IO_CMD="flamegraph-io --oneshot"
+# Config file
+EASY_FLAMEGRAPH_DEFAULT=/etc/default/easy-flamegraph.conf
 
-PATH=/usr/lib/easy-flamegraph:/usr/sbin:/usr/bin:/sbin:/bin
-
-# Global Setup
-EASY_FLAMEGRAPH_DEFAULT=/etc/default/easy-flamegraph
 [ -r $EASY_FLAMEGRAPH_DEFAULT ] && . $EASY_FLAMEGRAPH_DEFAULT
 
 if ! $USE_EASY_FLAMEGRAPH; then
 	exit 0
 fi
+
+# source lib
+[ -r "$EASY_FLAME_LIB_DIR"/lib ] && . "$EASY_FLAME_LIB_DIR"/lib
+
+# run all scripts in conditions dir
+DATE_SYS=$(date '+%Y.%m.%d-%H.%M.%S')
+DATE_UTC=$(date -u '+%Y.%m.%d-%H.%M.%S')
+debug_log "-------------------------------------------------------"
+debug_log "Start time:"
+debug_log "System: $DATE_SYS"
+debug_log "UTC: $DATE_UTC"
+
+# check if the required tool(s) is installed. e.g. linux-tools-common.
+required_tools_checking linux-tools-common
+required_tools_checking linux-tools-"$(uname -r)"
+required_tools_checking binutils
+required_tools_checking zip
+required_tools_checking sysstat
+
+debug_log "Run scripts in $EASY_FLAME_COND_DIR"
+for cond_script in "$EASY_FLAME_COND_DIR"/*; do
+	if [ -f "$cond_script" ] && [ -x "$cond_script" ]; then
+		debug_log "Run $cond_script"
+		bash "$cond_script"
+	fi
+done
+
+exit 0
 
 if $USE_MEM; then
 	if [ x"$EASY_FLAME_OUTPUT" != x"" ]; then
