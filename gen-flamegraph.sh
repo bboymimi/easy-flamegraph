@@ -296,7 +296,7 @@ fi
 trap "clean_exit" EXIT
 
 # generate the perf script file for the stackcollapse to extract the call stack
-"$PERF_SCRIPT_CMD" > "$PSCRIPT"
+${PERF_SCRIPT_CMD} > "$PSCRIPT"
 
 [ ! -s "$PSCRIPT" ] && echo "No perf data captured!"  && exit
 
