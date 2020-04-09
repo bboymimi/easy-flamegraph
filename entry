@@ -1,9 +1,13 @@
 #!/bin/bash
 
 # Config file
-EASY_FLAMEGRAPH_DEFAULT=/etc/default/easy-flamegraph.conf
+if [ -n "$1" ] && [ -r "$1" ]; then
+	EASY_FLAMEGRAPH_DEFAULT="$1"
+else
+	EASY_FLAMEGRAPH_DEFAULT=/etc/default/easy-flamegraph.conf
+fi
 
-[ -r $EASY_FLAMEGRAPH_DEFAULT ] && . $EASY_FLAMEGRAPH_DEFAULT
+[ -r "$EASY_FLAMEGRAPH_DEFAULT" ] && . "$EASY_FLAMEGRAPH_DEFAULT"
 
 if ! $USE_EASY_FLAMEGRAPH; then
 	exit 0
@@ -27,11 +31,19 @@ required_tools_checking binutils
 required_tools_checking zip
 required_tools_checking sysstat
 
+# check configurations
+# -t is to tar the intermediate files which is conflicted with the --keep-svg
+# which keeps only the .svg file
+if "$G_KEEP_SVG" && "$G_KEEP_TAR"; then
+	echo "Cannot set G_KEEP_SVG and G_KEEP_TAR together"
+	exit 1
+fi
+
 debug_log "Run scripts in $EASY_FLAME_COND_DIR"
 for cond_script in "$EASY_FLAME_COND_DIR"/*; do
 	if [ -f "$cond_script" ] && [ -x "$cond_script" ]; then
 		debug_log "Run $cond_script"
-		bash "$cond_script"
+		bash "$cond_script" "$EASY_FLAMEGRAPH_DEFAULT"
 	fi
 done
 
@@ -75,74 +87,4 @@ if $USE_MEM; then
 	fi
 
 	$FLAME_MEM_CMD  &
-fi
-
-if $USE_CPU; then
-	if [ x"$EASY_FLAME_OUTPUT" != x"" ]; then
-		FLAME_CPU_CMD="$FLAME_CPU_CMD -o $EASY_FLAME_OUTPUT/cpu"
-	fi
-
-	if [ x"$USE_CPU_PID" != x"" ]; then
-		FLAME_CPU_CMD="$FLAME_CPU_CMD -p $USE_CPU_PID"
-	fi
-
-	case $USE_CPU_SVG in
-		tar)
-			FLAME_CPU_CMD="$FLAME_CPU_CMD -t"
-			;;
-		svg)
-			FLAME_CPU_CMD="$FLAME_CPU_CMD --keep-svg"
-			;;
-	esac
-
-	if [ x"$CPU_THRESHOLD" != x"" ]; then
-		FLAME_CPU_CMD="$FLAME_CPU_CMD --cpu-threshold $CPU_THRESHOLD"
-	fi
-
-	if [ x"$USE_CPU_SRATE" != x"" ]; then
-		FLAME_CPU_CMD="$FLAME_CPU_CMD --sample-rate $USE_CPU_SRATE"
-	fi
-
-	if $PER_CPU_FLAMEGRAPH; then
-		FLAME_CPU_CMD="$FLAME_CPU_CMD --per-cpu-flamegraph"
-	fi
-
-	$FLAME_CPU_CMD &
-fi
-
-if $USE_IO; then
-	if [ x"$EASY_FLAME_OUTPUT" != x"" ]; then
-		FLAME_IO_CMD="$FLAME_IO_CMD -o $EASY_FLAME_OUTPUT/io"
-	fi
-
-	if [ x"$USE_IO_PID" != x"" ]; then
-		FLAME_IO_CMD="$FLAME_IO_CMD -p $USE_IO_PID"
-	fi
-
-	case $USE_IO_SVG in
-		tar)
-			FLAME_IO_CMD="$FLAME_IO_CMD -t"
-			;;
-		svg)
-			FLAME_IO_CMD="$FLAME_IO_CMD --keep-svg"
-			;;
-	esac
-
-	if [ x"$USE_IO_DISK" != x"" ]; then
-		FLAME_IO_CMD="$FLAME_IO_CMD --disk $USE_IO_DISK"
-	fi
-
-	if [ x"$READ_THRESHOLD" != x"" ]; then
-		FLAME_IO_CMD="$FLAME_IO_CMD --read-threshold $READ_THRESHOLD"
-	fi
-
-	if [ x"$WRITE_THRESHOLD" != x"" ]; then
-		FLAME_IO_CMD="$FLAME_IO_CMD --write-threshold $WRITE_THRESHOLD"
-	fi
-
-	if [ x"$USE_IO_SRATE" != x"" ]; then
-		FLAME_IO_CMD="$FLAME_IO_CMD --sample-rate $USE_IO_SRATE"
-	fi
-
-	$FLAME_IO_CMD &
 fi

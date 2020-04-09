@@ -38,9 +38,14 @@ condition_check() {
 PERF_DATA="perf.io"
 
 # Config file
-EASY_FLAMEGRAPH_DEFAULT=/etc/default/easy-flamegraph.conf
+if [ -n "$1" ] && [ -r "$1" ]; then
+	EASY_FLAMEGRAPH_DEFAULT="$1"
+else
+	echo "Unable to read config file $1"
+	exit 1
+fi
 
-[ -r $EASY_FLAMEGRAPH_DEFAULT ] && . $EASY_FLAMEGRAPH_DEFAULT
+[ -r "$EASY_FLAMEGRAPH_DEFAULT" ] && . "$EASY_FLAMEGRAPH_DEFAULT"
 
 if ! $USE_EASY_FLAMEGRAPH; then
 	exit 0
@@ -55,13 +60,6 @@ if ! "$USE_IO"; then
 fi
 
 debug_log "USE_IO: enabled"
-
-# -t is to tar the intermediate files which is conflicted with the --keep-svg
-# which keeps only the .svg file
-if "$G_KEEP_SVG" && "$G_KEEP_TAR"; then
-	echo "Cannot set G_KEEP_SVG and G_KEEP_TAR together"
-	exit 1
-fi
 
 # append the string of the profiled process name to differentiate the perf.data
 [[ "$APPEND_STRINGS" != "" ]] && PERF_DATA=$PERF_DATA.$APPEND_STRINGS$PID
