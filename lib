@@ -43,6 +43,7 @@ perf_collect() {
 	local ext="$2"
 	local title="$3"
 	local subtitle="$4"
+	local event="$5"
 
 	# create output directory for different type
 	output_dir="$EASY_FLAME_OUTPUT"/"$cond_type"
@@ -66,6 +67,11 @@ perf_collect() {
 
 	if [ -n "$G_PID" ]; then
 	       	PERF_TMP_CMD="$PERF_TMP_CMD -p $G_PID"
+	fi
+
+	# probe events
+	if [ -n "$event" ]; then
+		PERF_TMP_CMD="$PERF_TMP_CMD $event"
 	fi
 
 	[[ $GREP_STRINGS != "" ]] && PERF_TMP_CMD="$PERF_TMP_CMD -p $(pgrep "$GREP_STRINGS")"

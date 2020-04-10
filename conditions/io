@@ -27,7 +27,7 @@ condition_check() {
 		# if both read and write are over threshold, return true to start recording
 		if "$read_b" && "$write_b"; then
 			debug_log "Conditions matched, start perf record"
-			perf_collect "io" "$ext" "IO" "IO perf"
+			perf_collect "io" "$ext" "IO" "IO perf" "$USE_IO_EVENT"
 		fi
 	else
 		debug_log "Unsupported"

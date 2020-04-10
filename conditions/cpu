@@ -12,7 +12,7 @@ condition_check() {
 	if ((cpu_rate >= CPU_THRESHOLD)); then
 		ext="${ext}t${CPU_THRESHOLD}u${cpu_rate}"
 		debug_log "Conditions matched, start perf record"
-		perf_collect "cpu" "$ext" "CPU" "CPU perf"
+		perf_collect "cpu" "$ext" "CPU" "CPU perf" "$USE_CPU_EVENT"
 	fi
 }
 
