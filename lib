@@ -69,9 +69,34 @@ perf_collect() {
 	       	PERF_TMP_CMD="$PERF_TMP_CMD -p $G_PID"
 	fi
 
-	# probe events
+	# add global events
+	if [ -n "$G_EVENT" ]; then
+		PERF_TMP_CMD="$PERF_TMP_CMD $G_EVENT"
+	fi
+
+	# add type specific events
 	if [ -n "$event" ]; then
 		PERF_TMP_CMD="$PERF_TMP_CMD $event"
+	fi
+
+	# add user define events
+	if [ -n "$G_USER_EVENT" ]; then
+		IFS=',' read -ra user_events <<< "$G_USER_EVENT"
+		for user_event in "${user_events[@]}"; do
+			PERF_PROBE_CMD="perf probe"
+			IFS=' ' read -ra user_params <<< "$user_event"
+			for user_param in "${user_params[@]}"; do
+				PERF_PROBE_CMD="$PERF_PROBE_CMD $user_param"
+			done
+			debug_log "define probe: $PERF_PROBE_CMD"
+			$PERF_PROBE_CMD &> /dev/null || return
+		done
+
+		for event in $(perf probe -l | grep -P '\s*probe:' | awk '{print $1}'); do
+			debug_log "add probe: $event"
+			PERF_TMP_CMD="$PERF_TMP_CMD -e $event"
+		done
+
 	fi
 
 	[[ $GREP_STRINGS != "" ]] && PERF_TMP_CMD="$PERF_TMP_CMD -p $(pgrep "$GREP_STRINGS")"

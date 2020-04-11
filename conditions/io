@@ -5,33 +5,37 @@ condition_check() {
 	write_b=true
 	ext=""
 
-	if [ -z "$IO_PROCESS_NAME" ] && [ -z "$IO_PROCESS_PID" ]; then
+	if [ -z "$G_PID" ]; then
+		debug_log "Check system IO"
 		io_info=$(iostat -k -d -y 1 1 | grep "$USE_IO_DISK")
 		read_kb=$(echo "$io_info" | awk '{print $3}' | awk -F '.' '{print $1}')
 		write_kb=$(echo "$io_info" | awk '{print $4}' | awk -F '.' '{print $1}')
-		debug_log "Read threshold: $READ_THRESHOLD, actual: $read_kb"
-		debug_log "Write threshold: $WRITE_THRESHOLD, actual: $write_kb"
-		if [ -n "$READ_THRESHOLD" ]; then
-			if ((read_kb < READ_THRESHOLD)); then
-				read_b=false
-			fi
-			ext="${ext}r$READ_THRESHOLD-$read_kb"
-		fi
-		if [ -n "$WRITE_THRESHOLD" ]; then
-			if ((write_kb < WRITE_THRESHOLD)); then
-				write_b=false
-			fi
-			ext="${ext}w$WRITE_THRESHOLD-$write_kb"
-		fi
-
-		# if both read and write are over threshold, return true to start recording
-		if "$read_b" && "$write_b"; then
-			debug_log "Conditions matched, start perf record"
-			perf_collect "io" "$ext" "IO" "IO perf" "$USE_IO_EVENT"
-		fi
 	else
-		debug_log "Unsupported"
-		#IOTOP=$(iotop -P -k -b -n 1 | grep qemu-system-x86_64 | grep -v grep | awk '{print $1 " " $4}')
+		debug_log "Check PID IO: $G_PID"
+		io_info=$(iotop -p "$G_PID" -P -k -b -n 1 -qqq)
+		read_kb=$(echo "$io_info" | awk '{print $4}' | awk -F '.' '{print $1}')
+		write_kb=$(echo "$io_info" | awk '{print $6}' | awk -F '.' '{print $1}')
+	fi
+
+	debug_log "Read threshold: $READ_THRESHOLD, actual: $read_kb"
+	debug_log "Write threshold: $WRITE_THRESHOLD, actual: $write_kb"
+	if [ -n "$READ_THRESHOLD" ]; then
+		if ((read_kb < READ_THRESHOLD)); then
+			read_b=false
+		fi
+		ext="${ext}r$READ_THRESHOLD-$read_kb"
+	fi
+	if [ -n "$WRITE_THRESHOLD" ]; then
+		if ((write_kb < WRITE_THRESHOLD)); then
+			write_b=false
+		fi
+		ext="${ext}w$WRITE_THRESHOLD-$write_kb"
+	fi
+
+	# if both read and write are over threshold, return true to start recording
+	if "$read_b" && "$write_b"; then
+		debug_log "Conditions matched, start perf record"
+		perf_collect "io" "$ext" "IO" "IO perf" "$USE_IO_EVENT"
 	fi
 }
 

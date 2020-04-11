@@ -1,5 +1,70 @@
 #!/bin/bash
 
+collect_info() {
+	output_dir="$EASY_FLAME_OUTPUT"/bcache
+	mkdir -p "$output_dir"
+
+	date_sys=$(date '+%Y.%m.%d-%H.%M.%S')
+
+	# collect backing devices info
+	for dev in /sys/block/*; do
+		bcache=$(basename "$dev" | grep bcache)
+		if [ -z "$bcache" ]; then
+			continue
+		fi
+
+		bdev=$(readlink -f "$dev"/bcache | awk -F '/' '{print $(NF-1)}')
+		debug_log "Collect bcache info: $bcache ($bdev)"
+		output_file="$output_dir"/"$bcache".csv
+
+		cache_mode=$(cat "$dev"/bcache/cache_mode | awk -F '[' '{print $2}' | awk -F ']' '{print $1}')
+		state=$(cat "$dev"/bcache/state)
+		io_error_limit=$(cat "$dev"/bcache/io_error_limit)
+		sequential_cutoff=$(cat "$dev"/bcache/sequential_cutoff)
+		writeback_percent=$(cat "$dev"/bcache/writeback_percent)
+
+		errors=$(cat "$dev"/bcache/errors)
+		dirty_data=$(cat "$dev"/bcache/dirty_data)
+		readahead=$(cat "$dev"/bcache/readahead)
+		bypassed=$(cat "$dev"/bcache/stats_total/bypassed)
+		cache_hit_ratio=$(cat "$dev"/bcache/stats_total/cache_hit_ratio)
+
+		if ! [ -f "$output_file" ]; then
+			echo "date,cache_mode,state,io_error_limit,sequential_cutoff,writeback_percent,errors,dirty_data,readahead,bypassed,cache_hit_ratio" > "$output_file"
+		fi
+
+		echo "$date_sys,$cache_mode,$state,$io_error_limit,$sequential_cutoff,$writeback_percent,$errors,$dirty_data,$readahead,$bypassed,$cache_hit_ratio" >> "$output_file"
+	done
+
+	# collect cache devices info
+	for cache in /sys/fs/bcache/*; do
+		uuid=$(basename "$cache")
+		if [ "$uuid" != "register" ] && [ "$uuid" != "register_quiet" ]; then
+			cdev=$(readlink -f "$cache"/cache0 | awk -F '/' '{print $(NF-1)}')
+			debug_log "Collect cache info: $cdev"
+			output_file="$output_dir"/"$cdev".csv
+
+			block_size=$(cat "$cache"/block_size)
+			btree_cache_size=$(cat "$cache"/btree_cache_size)
+			bucket_size=$(cat "$cache"/bucket_size)
+			io_error_limit=$(cat "$cache"/io_error_limit)
+			tree_depth=$(cat "$cache"/tree_depth)
+			congested_read_threshold_us=$(cat "$cache"/congested_read_threshold_us)
+			congested_write_threshold_us=$(cat "$cache"/congested_write_threshold_us)
+			congested=$(cat "$cache"/congested)
+			io_errors=$(cat "$cache"/cache0/io_errors)
+			btree_written=$(cat "$cache"/cache0/btree_written)
+			metadata_written=$(cat "$cache"/cache0/metadata_written)
+		fi
+
+		if ! [ -f "$output_file" ]; then
+			echo "date,block_size,btree_cache_size,bucket_size,io_error_limi,tree_depth,congested_read_threshold_us,congested_write_threshold_us,congested,io_errors,btree_written,metadata_written" > "$output_file"
+		fi
+
+		echo "$date_sys,$block_size,$btree_cache_size,$bucket_size,$io_error_limit,$tree_depth,$congested_read_threshold_us,$congested_write_threshold_us,$congested,$io_errors,$btree_written,$metadata_written" >> "$output_file"
+	done
+}
+
 # Config file
 if [ -n "$1" ] && [ -r "$1" ]; then
 	EASY_FLAMEGRAPH_DEFAULT="$1"
@@ -23,62 +88,6 @@ if ! "$USE_BCACHE"; then
 fi
 
 debug_log "USE_BCACHE: enabled"
-output_dir="$EASY_FLAME_OUTPUT"/bcache
-mkdir -p "$output_dir"
 
-date_sys=$(date '+%Y.%m.%d-%H.%M.%S')
-for dev in /sys/block/*; do
-        bcache=$(basename "$dev" | grep bcache)
-        if [ -z "$bcache" ]; then
-		continue
-        fi
-
-	bdev=$(readlink -f "$dev"/bcache | awk -F '/' '{print $(NF-1)}')
-	debug_log "collect bcache info: $bcache ($bdev)"
-	output_file="$output_dir"/"$bcache".csv
-
-	cache_mode=$(cat "$dev"/bcache/cache_mode | awk -F '[' '{print $2}' | awk -F ']' '{print $1}')
-	state=$(cat "$dev"/bcache/state)
-	io_error_limit=$(cat "$dev"/bcache/io_error_limit)
-	sequential_cutoff=$(cat "$dev"/bcache/sequential_cutoff)
-	writeback_percent=$(cat "$dev"/bcache/writeback_percent)
-
-	errors=$(cat "$dev"/bcache/errors)
-	dirty_data=$(cat "$dev"/bcache/dirty_data)
-	readahead=$(cat "$dev"/bcache/readahead)
-	bypassed=$(cat "$dev"/bcache/stats_total/bypassed)
-	cache_hit_ratio=$(cat "$dev"/bcache/stats_total/cache_hit_ratio)
-
-	if ! [ -f "$output_file" ]; then
-		echo "date,cache_mode,state,io_error_limit,sequential_cutoff,writeback_percent,errors,dirty_data,readahead,bypassed,cache_hit_ratio" > "$output_file"
-	fi
-
-	echo "$date_sys,$cache_mode,$state,$io_error_limit,$sequential_cutoff,$writeback_percent,$errors,$dirty_data,$readahead,$bypassed,$cache_hit_ratio" >> "$output_file"
-done
-
-for cache in /sys/fs/bcache/*; do
-	uuid=$(basename "$cache")
-	if [ "$uuid" != "register" ] && [ "$uuid" != "register_quiet" ]; then
-		cdev=$(readlink -f "$cache"/cache0 | awk -F '/' '{print $(NF-1)}')
-		debug_log "collect cache info: $cdev"
-		output_file="$output_dir"/"$cdev".csv
-
-		block_size=$(cat "$cache"/block_size)
-		btree_cache_size=$(cat "$cache"/btree_cache_size)
-		bucket_size=$(cat "$cache"/bucket_size)
-		io_error_limit=$(cat "$cache"/io_error_limit)
-		tree_depth=$(cat "$cache"/tree_depth)
-		congested_read_threshold_us=$(cat "$cache"/congested_read_threshold_us)
-		congested_write_threshold_us=$(cat "$cache"/congested_write_threshold_us)
-		congested=$(cat "$cache"/congested)
-		io_errors=$(cat "$cache"/cache0/io_errors)
-		btree_written=$(cat "$cache"/cache0/btree_written)
-		metadata_written=$(cat "$cache"/cache0/metadata_written)
-	fi
-
-	if ! [ -f "$output_file" ]; then
-		echo "date,block_size,btree_cache_size,bucket_size,io_error_limi,tree_depth,congested_read_threshold_us,congested_write_threshold_us,congested,io_errors,btree_written,metadata_written" > "$output_file"
-	fi
-
-	echo "$date_sys,$block_size,$btree_cache_size,$bucket_size,$io_error_limit,$tree_depth,$congested_read_threshold_us,$congested_write_threshold_us,$congested,$io_errors,$btree_written,$metadata_written" >> "$output_file"
-done
+# for collecting info, we can run it in background
+collect_info &
