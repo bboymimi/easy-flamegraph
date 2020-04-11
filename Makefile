@@ -22,6 +22,7 @@ install:
 	$(INSTALL_BIN) conditions/cpu $(EZ_COND_DIR)
 	$(INSTALL_BIN) conditions/mem $(EZ_COND_DIR)
 	$(INSTALL_BIN) conditions/io $(EZ_COND_DIR)
+	$(INSTALL_BIN) conditions/bcache $(EZ_COND_DIR)
 	$(INSTALL_DATA) easy-flamegraph.conf $(EZ_DEFAULT_DIR)
 	$(INSTALL_DATA) easy-flamegraph-cron $(EZ_CRON_DIR)
 

@@ -30,6 +30,7 @@ required_tools_checking linux-tools-"$(uname -r)"
 required_tools_checking binutils
 required_tools_checking zip
 required_tools_checking sysstat
+required_tools_checking bcache-tools
 
 # check configurations
 # -t is to tar the intermediate files which is conflicted with the --keep-svg
@@ -42,7 +43,7 @@ fi
 debug_log "Run scripts in $EASY_FLAME_COND_DIR"
 for cond_script in "$EASY_FLAME_COND_DIR"/*; do
 	if [ -f "$cond_script" ] && [ -x "$cond_script" ]; then
-		debug_log "Run $cond_script"
+		debug_log "Script: $(basename "$cond_script")"
 		bash "$cond_script" "$EASY_FLAMEGRAPH_DEFAULT"
 	fi
 done
