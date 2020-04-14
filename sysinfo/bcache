@@ -37,6 +37,10 @@ collect_info() {
 	done
 
 	# collect cache devices info
+	if ! [ -d "/sys/fs/bcache" ]; then
+		return
+	fi
+
 	for cache in /sys/fs/bcache/*; do
 		uuid=$(basename "$cache")
 		if [ "$uuid" != "register" ] && [ "$uuid" != "register_quiet" ]; then
@@ -90,4 +94,4 @@ fi
 debug_log "USE_BCACHE: enabled"
 
 # for collecting info, we can run it in background
-collect_info &
+collect_info

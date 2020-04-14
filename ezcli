@@ -1,0 +1,60 @@
+#!/bin/bash
+
+usage() {
+	echo "usage: `basename $0` OPTIONS VALUE"
+	echo
+	echo "example: `basename $0` -a <append string> -g <partial process name for pgrep > -p <process ID>"
+	echo
+	echo "OPTIONS:"
+	echo "	-c - config file"
+	echo "	  provide a config file, default to /etc/default/easy-flamegraph.conf"
+	echo "	-s - oneshot"
+	echo "	  execute once"
+	echo "	-t - time period (second)"
+	echo "	  sleep n seconds before the next run"
+}
+
+CONF_FILE="/etc/default/easy-flamegraph.conf"
+ONESHOT=false
+TIME_PERIOD=10
+
+while (($# > 0))
+do
+	case $1 in
+		-c)
+			CONF_FILE="$2"
+			shift 2
+			;;
+		-s)
+			ONESHOT=true
+			shift
+			;;
+		-t)
+			TIME_PERIOD="$2"
+			shift 2
+			;;
+		*)
+			echo "Error!! Invalid input: $1"
+			usage
+			exit 1
+			;;
+	esac
+done
+
+
+[ -r "$CONF_FILE" ] && . "$CONF_FILE"
+
+if ! $USE_EASY_FLAMEGRAPH; then
+	echo "Not enabled in configuration file: $EASY_FLAMEGRAPH_DEFAULT"
+	exit 0
+fi
+
+while true; do
+	$EASY_FLAME_LIB_DIR/entry
+
+	if "$ONESHOT"; then
+		exit 0
+	fi
+
+	sleep "$TIME_PERIOD"
+done

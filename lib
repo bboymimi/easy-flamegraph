@@ -109,6 +109,17 @@ perf_collect() {
 	# press ctrl+c when you want to stop the profiling
 	PERF_CMD="$PERF_TMP_CMD -o $PERF_DATA_FINAL sleep $G_PERF_PERIOD"
 
+	# we can enable additional sysinfo to collect before perf record
+	if ! "$USE_SYSINFO_PERIODICALLY"; then
+		debug_log "Run scripts in $EASY_FLAME_SYSINFO_DIR"
+		for sysinfo_script in "$EASY_FLAME_SYSINFO_DIR"/*; do
+			if [ -f "$sysinfo_script" ] && [ -x "$sysinfo_script" ]; then
+				debug_log "Script: $(basename "$sysinfo_script")"
+				bash "$sysinfo_script" "$EASY_FLAMEGRAPH_DEFAULT"
+			fi
+		done
+	fi
+
 	debug_log "CMD: $PERF_CMD"
 
 	# Profiling the system

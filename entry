@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Config file
+# config file
 if [ -n "$1" ] && [ -r "$1" ]; then
 	EASY_FLAMEGRAPH_DEFAULT="$1"
 else
@@ -10,11 +10,18 @@ fi
 [ -r "$EASY_FLAMEGRAPH_DEFAULT" ] && . "$EASY_FLAMEGRAPH_DEFAULT"
 
 if ! $USE_EASY_FLAMEGRAPH; then
+	echo "Not enabled in configuration file: $EASY_FLAMEGRAPH_DEFAULT"
 	exit 0
 fi
 
 # source lib
 [ -r "$EASY_FLAME_LIB_DIR"/lib ] && . "$EASY_FLAME_LIB_DIR"/lib
+
+# make sure only one process is running
+if ! flock -n "$EASY_FLAME_LOCK" echo "Got lock"; then
+	debug_log "Can not get lock, another process is running"
+	exit 1
+fi
 
 # run all scripts in conditions dir
 DATE_SYS=$(date '+%Y.%m.%d-%H.%M.%S')
@@ -40,6 +47,16 @@ if "$G_KEEP_SVG" && "$G_KEEP_TAR"; then
 	exit 1
 fi
 
+if "$USE_SYSINFO_PERIODICALLY"; then
+	debug_log "Run scripts in $EASY_FLAME_SYSINFO_DIR"
+	for sysinfo_script in "$EASY_FLAME_SYSINFO_DIR"/*; do
+		if [ -f "$sysinfo_script" ] && [ -x "$sysinfo_script" ]; then
+			debug_log "Script: $(basename "$sysinfo_script")"
+			bash "$sysinfo_script" "$EASY_FLAMEGRAPH_DEFAULT"
+		fi
+	done
+fi
+
 debug_log "Run scripts in $EASY_FLAME_COND_DIR"
 for cond_script in "$EASY_FLAME_COND_DIR"/*; do
 	if [ -f "$cond_script" ] && [ -x "$cond_script" ]; then
@@ -51,36 +68,16 @@ done
 exit 0
 
 if $USE_MEM; then
-	if [ x"$EASY_FLAME_OUTPUT" != x"" ]; then
-		FLAME_MEM_CMD="$FLAME_MEM_CMD -o $EASY_FLAME_OUTPUT/mem"
-	fi
-
-	if [ x"$USE_MEM_PID" != x"" ]; then
-		FLAME_MEM_CMD="$FLAME_MEM_CMD -p $USE_MEM_PID"
-	fi
-
 	if [ x"$USE_MEM_THRESHOLD_SIZE" != x"" ]; then
 		FLAME_MEM_CMD="$FLAME_MEM_CMD -s $USE_MEM_THRESHOLD_SIZE"
-	fi
-
-	if $USE_MEM_TAR; then
-		FLAME_MEM_CMD="$FLAME_MEM_CMD -t"
 	fi
 
 	if $USE_MEM_GLIBC; then
 		FLAME_MEM_CMD="$FLAME_MEM_CMD --glibc"
 	fi
 
-	if $USE_MEM_SVG; then
-		FLAME_MEM_CMD="$FLAME_MEM_CMD --keep-svg"
-	fi
-
 	if $USE_MEM_KMEM; then
 		FLAME_MEM_CMD="$FLAME_MEM_CMD --kmem"
-	fi
-
-	if [ x"$USE_MEM_SRATE" != x"" ]; then
-		FLAME_MEM_CMD="$FLAME_MEM_CMD --sample-rate $USE_MEM_SRATE"
 	fi
 
 	if $USE_MEM_TCMALLOC; then

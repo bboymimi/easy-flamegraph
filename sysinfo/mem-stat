@@ -1,0 +1,61 @@
+#!/bin/bash
+
+collect_info() {
+	output_dir="$EASY_FLAME_OUTPUT"/mem-stat
+	mkdir -p "$output_dir"
+
+	date_sys=$(date '+%Y.%m.%d-%H.%M.%S')
+
+	vmstat=$(cat /proc/vmstat)
+	zoneinfo=$(cat /proc/zoneinfo)
+	meminfo=$(cat /proc/meminfo)
+	pagetypeinfo=$(cat /proc/pagetypeinfo)
+	slabinfo=$(cat /proc/slabinfo)
+
+	echo "$date_sys" >> "$output_dir"/vmstat.log
+	cat /proc/vmstat >> "$output_dir"/vmstat.log
+	echo "---------------------------------------------" >> "$output_dir"/vmstat.log
+
+	echo "$date_sys" >> "$output_dir"/zoneinfo.log
+	cat /proc/zoneinfo >> "$output_dir"/zoneinfo.log
+	echo "---------------------------------------------" >> "$output_dir"/zoneinfo.log
+
+	echo "$date_sys" >> "$output_dir"/meminfo.log
+	cat /proc/meminfo >> "$output_dir"/meminfo.log
+	echo "---------------------------------------------" >> "$output_dir"/meminfo.log
+
+	echo "$date_sys" >> "$output_dir"/pagetypeinfo.log
+	cat /proc/pagetypeinfo >> "$output_dir"/pagetypeinfo.log
+	echo "---------------------------------------------" >> "$output_dir"/pagetypeinfo.log
+
+	echo "$date_sys" >> "$output_dir"/slabinfo.log
+	cat /proc/slabinfo >> "$output_dir"/slabinfo.log
+	echo "---------------------------------------------" >> "$output_dir"/slabinfo.log
+}
+
+# Config file
+if [ -n "$1" ] && [ -r "$1" ]; then
+	EASY_FLAMEGRAPH_DEFAULT="$1"
+else
+	echo "Unable to read config file $1"
+	exit 1
+fi
+
+[ -r "$EASY_FLAMEGRAPH_DEFAULT" ] && . "$EASY_FLAMEGRAPH_DEFAULT"
+
+if ! $USE_EASY_FLAMEGRAPH; then
+	exit 0
+fi
+
+# source lib
+[ -r "$EASY_FLAME_LIB_DIR"/lib ] && . "$EASY_FLAME_LIB_DIR"/lib
+
+if ! "$USE_MEM_STAT"; then
+	debug_log "USE_MEM_STAT: disabled"
+	exit 0
+fi
+
+debug_log "USE_MEM_STAT: enabled"
+
+# for collecting info, we can run it in background
+collect_info
