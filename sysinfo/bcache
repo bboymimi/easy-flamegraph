@@ -17,7 +17,7 @@ collect_info() {
 		debug_log "Collect bcache info: $bcache ($bdev)"
 		output_file="$output_dir"/"$bcache".csv
 
-		cache_mode=$(cat "$dev"/bcache/cache_mode | awk -F '[' '{print $2}' | awk -F ']' '{print $1}')
+		cache_mode=$(awk -F '[' '{print $2}' "$dev"/bcache/cache_mode | awk -F ']' '{print $1}')
 		state=$(cat "$dev"/bcache/state)
 		io_error_limit=$(cat "$dev"/bcache/io_error_limit)
 		sequential_cutoff=$(cat "$dev"/bcache/sequential_cutoff)

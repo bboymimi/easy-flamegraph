@@ -172,7 +172,7 @@ merge_all_flamegraphs() {
 		echo "$stack ${stack_array[$stack]}" >> "$PFOLDED_SUM_FINAL"
 	done
 
-	cat "$PFOLDED_SUM_FINAL" | ${FPATH}flamegraph.pl > "$PFOLDED_SUM_FINAL_SVG"
+	"$FPATH"flamegraph.pl "$PFOLDED_SUM_FINAL" > "$PFOLDED_SUM_FINAL_SVG"
 }
 
 clean_intermediate_files() {

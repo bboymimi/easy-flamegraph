@@ -1,9 +1,9 @@
 #!/bin/bash
 
 usage() {
-	echo "usage: `basename $0` OPTIONS VALUE"
+	echo "usage: $(basename "$0") OPTIONS VALUE"
 	echo
-	echo "example: `basename $0` -a <append string> -g <partial process name for pgrep > -p <process ID>"
+	echo "example: $(basename "$0") -a <append string> -g <partial process name for pgrep > -p <process ID>"
 	echo
 	echo "OPTIONS:"
 	echo "	-c - config file"
@@ -50,7 +50,7 @@ if ! $USE_EASY_FLAMEGRAPH; then
 fi
 
 while true; do
-	$EASY_FLAME_LIB_DIR/entry
+	"$EASY_FLAME_LIB_DIR"/entry
 
 	if "$ONESHOT"; then
 		exit 0
