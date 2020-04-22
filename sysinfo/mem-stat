@@ -1,0 +1,65 @@
+#!/bin/bash
+
+collect_info() {
+	output_dir="$EASY_FLAME_OUTPUT"/mem-stat
+	mkdir -p "$output_dir"
+
+	date_sys=$(date '+%Y.%m.%d-%H.%M.%S')
+
+	{
+		echo "---------------------------------------------"
+		echo "$date_sys"
+		cat /proc/vmstat
+	}>>"$output_dir"/vmstat.log
+
+	{
+		echo "---------------------------------------------"
+		echo "$date_sys"
+		cat /proc/zoneinfo
+	}>>"$output_dir"/zoneinfo.log
+
+	{
+		echo "---------------------------------------------"
+		echo "$date_sys"
+		cat /proc/meminfo
+	}>>"$output_dir"/meminfo.log
+
+	{
+		echo "---------------------------------------------"
+		echo "$date_sys"
+		cat /proc/pagetypeinfo
+	}>>"$output_dir"/pagetypeinfo.log
+
+	{
+		echo "---------------------------------------------"
+		echo "$date_sys"
+		cat /proc/slabinfo
+	}>>"$output_dir"/slabinfo.log
+}
+
+# Config file
+if [ -n "$1" ] && [ -r "$1" ]; then
+	EASY_FLAMEGRAPH_DEFAULT="$1"
+else
+	echo "Unable to read config file $1"
+	exit 1
+fi
+
+[ -r "$EASY_FLAMEGRAPH_DEFAULT" ] && . "$EASY_FLAMEGRAPH_DEFAULT"
+
+if ! $USE_EASY_FLAMEGRAPH; then
+	exit 0
+fi
+
+# source lib
+[ -r "$EASY_FLAME_LIB_DIR"/lib ] && . "$EASY_FLAME_LIB_DIR"/lib
+
+if ! "$USE_MEM_STAT"; then
+	debug_log "USE_MEM_STAT: disabled"
+	exit 0
+fi
+
+debug_log "USE_MEM_STAT: enabled"
+
+# for collecting info, we can run it in background
+collect_info

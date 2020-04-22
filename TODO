@@ -1,0 +1,27 @@
+- check config parameters
+
+- check if flamegraph is still running before executing entry
+
+- modify memory
+
+- merge_all_flamegraphs
+
+- cli to open data by given time
+
+- save perf script only, for flamescope
+
+- cron to systemd
+
+- how to use time between trace points to trigger perf record
+
+- create a sysinfo log folder
+
+- run-parts
+
+- Makefile, how to delete files
+
+- /proc/PID to trigger perf record or sysinfo
+
+- ceph libunwind libdw
+
+- ceph osd perf counter, use avgtime to trigger log level or perf record

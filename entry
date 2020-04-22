@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# config file
+if [ -n "$1" ] && [ -r "$1" ]; then
+	EASY_FLAMEGRAPH_DEFAULT="$1"
+else
+	EASY_FLAMEGRAPH_DEFAULT=/etc/default/easy-flamegraph.conf
+fi
+
+[ -r "$EASY_FLAMEGRAPH_DEFAULT" ] && . "$EASY_FLAMEGRAPH_DEFAULT"
+
+if ! $USE_EASY_FLAMEGRAPH; then
+	echo "Not enabled in configuration file: $EASY_FLAMEGRAPH_DEFAULT"
+	exit 0
+fi
+
+# source lib
+[ -r "$EASY_FLAME_LIB_DIR"/lib ] && . "$EASY_FLAME_LIB_DIR"/lib
+
+# make sure only one process is running
+if ! flock -n "$EASY_FLAME_LOCK" echo "Got lock"; then
+	debug_log "Can not get lock, another process is running"
+	exit 1
+fi
+
+# run all scripts in conditions dir
+DATE_SYS=$(date '+%Y.%m.%d-%H.%M.%S')
+DATE_UTC=$(date -u '+%Y.%m.%d-%H.%M.%S')
+debug_log "-------------------------------------------------------"
+debug_log "Start time:"
+debug_log "System: $DATE_SYS"
+debug_log "UTC: $DATE_UTC"
+
+# check if the required tool(s) is installed. e.g. linux-tools-common.
+required_tools_checking linux-tools-common
+required_tools_checking linux-tools-"$(uname -r)"
+required_tools_checking binutils
+required_tools_checking zip
+required_tools_checking sysstat
+required_tools_checking bcache-tools
+
+# check configurations
+# -t is to tar the intermediate files which is conflicted with the --keep-svg
+# which keeps only the .svg file
+if "$G_KEEP_SVG" && "$G_KEEP_TAR"; then
+	echo "Cannot set G_KEEP_SVG and G_KEEP_TAR together"
+	exit 1
+fi
+
+if "$USE_SYSINFO_PERIODICALLY"; then
+	debug_log "Run scripts in $EASY_FLAME_SYSINFO_DIR"
+	for sysinfo_script in "$EASY_FLAME_SYSINFO_DIR"/*; do
+		if [ -f "$sysinfo_script" ] && [ -x "$sysinfo_script" ]; then
+			debug_log "Script: $(basename "$sysinfo_script")"
+			bash "$sysinfo_script" "$EASY_FLAMEGRAPH_DEFAULT"
+		fi
+	done
+fi
+
+debug_log "Run scripts in $EASY_FLAME_COND_DIR"
+for cond_script in "$EASY_FLAME_COND_DIR"/*; do
+	if [ -f "$cond_script" ] && [ -x "$cond_script" ]; then
+		debug_log "Script: $(basename "$cond_script")"
+		bash "$cond_script" "$EASY_FLAMEGRAPH_DEFAULT"
+	fi
+done
+
+exit 0
+
+if $USE_MEM; then
+	if [ x"$USE_MEM_THRESHOLD_SIZE" != x"" ]; then
+		FLAME_MEM_CMD="$FLAME_MEM_CMD -s $USE_MEM_THRESHOLD_SIZE"
+	fi
+
+	if $USE_MEM_GLIBC; then
+		FLAME_MEM_CMD="$FLAME_MEM_CMD --glibc"
+	fi
+
+	if $USE_MEM_KMEM; then
+		FLAME_MEM_CMD="$FLAME_MEM_CMD --kmem"
+	fi
+
+	if $USE_MEM_TCMALLOC; then
+		FLAME_MEM_CMD="$FLAME_MEM_CMD --tcmalloc"
+	fi
+
+	$FLAME_MEM_CMD  &
+fi

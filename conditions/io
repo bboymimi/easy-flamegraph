@@ -1,0 +1,89 @@
+#!/bin/bash
+
+condition_check() {
+	read_b=true
+	write_b=true
+	ext=""
+
+	if [ -z "$G_PID" ]; then
+		debug_log "Check system IO"
+		io_info=$(iostat -k -d -y 1 1 | grep "$USE_IO_DISK")
+		read_kb=$(echo "$io_info" | awk '{print $3}' | awk -F '.' '{print $1}')
+		write_kb=$(echo "$io_info" | awk '{print $4}' | awk -F '.' '{print $1}')
+	else
+		debug_log "Check PID IO: $G_PID"
+		io_info=$(iotop -p "$G_PID" -P -k -b -n 1 -qqq)
+		read_kb=$(echo "$io_info" | awk '{print $4}' | awk -F '.' '{print $1}')
+		write_kb=$(echo "$io_info" | awk '{print $6}' | awk -F '.' '{print $1}')
+	fi
+
+	debug_log "Read threshold: $READ_THRESHOLD, actual: $read_kb"
+	debug_log "Write threshold: $WRITE_THRESHOLD, actual: $write_kb"
+	if [ -n "$READ_THRESHOLD" ]; then
+		if ((read_kb < READ_THRESHOLD)); then
+			read_b=false
+		fi
+		ext="${ext}r$READ_THRESHOLD-$read_kb"
+	fi
+	if [ -n "$WRITE_THRESHOLD" ]; then
+		if ((write_kb < WRITE_THRESHOLD)); then
+			write_b=false
+		fi
+		ext="${ext}w$WRITE_THRESHOLD-$write_kb"
+	fi
+
+	# if both read and write are over threshold, return true to start recording
+	if "$read_b" && "$write_b"; then
+		debug_log "Conditions matched, start perf record"
+		perf_collect "io" "$ext" "IO" "IO perf" "$USE_IO_EVENT"
+	fi
+}
+
+PERF_DATA="perf.io"
+
+# Config file
+if [ -n "$1" ] && [ -r "$1" ]; then
+	EASY_FLAMEGRAPH_DEFAULT="$1"
+else
+	echo "Unable to read config file $1"
+	exit 1
+fi
+
+[ -r "$EASY_FLAMEGRAPH_DEFAULT" ] && . "$EASY_FLAMEGRAPH_DEFAULT"
+
+if ! $USE_EASY_FLAMEGRAPH; then
+	exit 0
+fi
+
+# source lib
+[ -r "$EASY_FLAME_LIB_DIR"/lib ] && . "$EASY_FLAME_LIB_DIR"/lib
+
+if ! "$USE_IO"; then
+	debug_log "USE_IO: disabled"
+	exit 0
+fi
+
+debug_log "USE_IO: enabled"
+
+# append the string of the profiled process name to differentiate the perf.data
+[[ "$APPEND_STRINGS" != "" ]] && PERF_DATA=$PERF_DATA.$APPEND_STRINGS$PID
+
+# clean up the perf-output
+if [ -z "$EASY_FLAME_PERF_DIR" ]; then
+	echo "Must specify perf output dir"
+	exit 1
+fi
+
+debug_log "Clear perf output"
+mkdir -p "$EASY_FLAME_PERF_DIR"
+rm -rf "${EASY_FLAME_PERF_DIR:?}"/*
+
+#trap EXIT signal only
+trap "exit_work" EXIT
+
+# clean the probe point before adding the new probe point
+clean_probe_points
+
+# start checking if conditions are matched
+debug_log "Checking conditions"
+condition_check

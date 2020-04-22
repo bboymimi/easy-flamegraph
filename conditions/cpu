@@ -1,0 +1,106 @@
+#!/bin/bash
+
+condition_check() {
+	ext=""
+
+	idle_rate=$(mpstat -P ON 1 1| grep -P 'Average:\s+all'| perl -n -e '/Average:\s+all.+\s(\d+)\.(\d+)$/; print $1;')
+	debug_log "Idle rate: $idle_rate"
+	cpu_rate=$((100-idle_rate))
+	debug_log "CPU threshold: $CPU_THRESHOLD, utilization: $cpu_rate"
+
+	# start perf if cpu rate is over threshold
+	if ((cpu_rate >= CPU_THRESHOLD)); then
+		ext="${ext}t${CPU_THRESHOLD}u${cpu_rate}"
+		debug_log "Conditions matched, start perf record"
+		perf_collect "cpu" "$ext" "CPU" "CPU perf" "$USE_CPU_EVENT"
+	fi
+}
+
+# Config file
+if [ -n "$1" ] && [ -r "$1" ]; then
+	EASY_FLAMEGRAPH_DEFAULT="$1"
+else
+	echo "Unable to read config file $1"
+	exit 1
+fi
+
+[ -r "$EASY_FLAMEGRAPH_DEFAULT" ] && . "$EASY_FLAMEGRAPH_DEFAULT"
+
+if ! $USE_EASY_FLAMEGRAPH; then
+	exit 0
+fi
+
+# source lib
+[ -r "$EASY_FLAME_LIB_DIR"/lib ] && . "$EASY_FLAME_LIB_DIR"/lib
+
+if ! "$USE_CPU"; then
+	debug_log "USER_CPU: disabled"
+	exit 0
+fi
+
+debug_log "USER_CPU: enabled"
+
+APPEND_STRINGS=""
+PERF_DATA="perf.cpu"
+
+# append the string of the profiled process name to differentiate the perf.data
+[[ "$APPEND_STRINGS" != "" ]] && PERF_DATA=$PERF_DATA.$APPEND_STRINGS$PID
+
+# clean up the perf-output
+if [ -z "$EASY_FLAME_PERF_DIR" ]; then
+	echo "Must specify perf output dir"
+	exit 1
+fi
+
+debug_log "Clear perf output"
+mkdir -p "$EASY_FLAME_PERF_DIR"
+rm -rf "${EASY_FLAME_PERF_DIR:?}"/*
+
+#trap EXIT signal only
+trap "exit_work" EXIT
+
+# clean the probe point before adding the new probe point
+clean_probe_points
+
+condition_check
+
+exit 0
+
+
+usage_function() {
+	echo "usage: `basename $0` OPTIONS VALUE"
+	echo
+	echo "example: `basename $0` -a <append string> -g <partial process name for pgrep > -p <process ID>"
+	echo
+	echo "OPTIONS:"
+	echo "	-a - append process name strings"
+	echo "	  to append specific strings e.g., qemu/compiz, to easily differentiate perf.data"
+	echo "	-g - grep strings"
+	echo "	  to grep specific strings e.g., qemu, to profile"
+}
+
+perf_periodically_collect() {
+	while true; do
+		echo "###########"
+		echo "# CMD: $PERF_CMD"
+		echo "# The Perf file will be generated to \"$PERF_DATA_FINAL\""
+		echo "# Profiling..."
+		echo "###########"
+	done
+}
+
+
+while (($# > 0))
+do
+	case $1 in
+		-a)
+			APPEND_STRINGS=$2
+			shift 2
+			;;
+		-g)
+			GREP_STRINGS=$2
+			shift 2
+			;;
+	esac
+done
+

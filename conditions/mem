@@ -1,32 +1,37 @@
 #!/bin/bash
 
+# Config file
+if [ -n "$1" ] && [ -r "$1" ]; then
+	EASY_FLAMEGRAPH_DEFAULT="$1"
+else
+	echo "Unable to read config file $1"
+	exit 1
+fi
+
+[ -r $EASY_FLAMEGRAPH_DEFAULT ] && . $EASY_FLAMEGRAPH_DEFAULT
+
+if ! $USE_EASY_FLAMEGRAPH; then
+	exit 0
+fi
+
+# source lib
+[ -r "$EASY_FLAME_LIB_DIR"/lib ] && . "$EASY_FLAME_LIB_DIR"/lib
+
+if ! "$USE_MEM"; then
+	debug_log "USE_MEM: disabled"
+	exit 0
+fi
+
+debug_log "USE_MEM: enabled"
+
 APPEND_STRINGS=""
-CHK_PKG=""
-DIGIT="^[0-9]+$"
-FPATH=`dirname $0`"/"
-FPERF="`dirname $0`/perf-output"
 GLIBC_APPEND=""
 GLIBC_HOOK=false
 GREP_STRINGS=""
-KEEP_SVG=false
-KEEP_SVG_OPTION="-t" # tar the perf.data by default
 KMEM_APPEND=""
 KMEM_HOOK=false
-ONESHOT=false
-PERF_CMD=""
 PERF_DATA="perf.mem"
-PERF_DATA_FINAL=""
-PERF_TMP_CMD=""
-PFOLDED_SUM="${FPERF}/stack_sum"
-PFOLDED_SUM_FINAL="${FPERF}/callstack_sum_final"
-PFOLDED_SUM_FINAL_SVG="${FPERF}/callstack_sum_final.svg"
-PID=""
-PROBE_POINTS=""
-REP=1
 RSS=""
-SLEEP_TIME="3"
-SRATE=99
-TAR=false
 TCMALLOC_APPEND=""
 TCMALLOC_HOOK=false
 THRESHOLD_SIZE="0"

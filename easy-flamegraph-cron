@@ -1,0 +1,2 @@
+# Flamegraph-mem sample in 1 minute period
+*/1 * * * * root /usr/lib/easy-flamegraph/entry > /dev/null
