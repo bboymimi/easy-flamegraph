@@ -7,33 +7,33 @@ collect_info() {
 	date_sys=$(date '+%Y.%m.%d-%H.%M.%S')
 
 	{
+		echo "---------------------------------------------"
 		echo "$date_sys"
 		cat /proc/vmstat
-		echo "---------------------------------------------"
 	}>>"$output_dir"/vmstat.log
 
 	{
+		echo "---------------------------------------------"
 		echo "$date_sys"
 		cat /proc/zoneinfo
-		echo "---------------------------------------------"
 	}>>"$output_dir"/zoneinfo.log
 
 	{
+		echo "---------------------------------------------"
 		echo "$date_sys"
 		cat /proc/meminfo
-		echo "---------------------------------------------"
 	}>>"$output_dir"/meminfo.log
 
 	{
+		echo "---------------------------------------------"
 		echo "$date_sys"
 		cat /proc/pagetypeinfo
-		echo "---------------------------------------------"
 	}>>"$output_dir"/pagetypeinfo.log
 
 	{
+		echo "---------------------------------------------"
 		echo "$date_sys"
 		cat /proc/slabinfo
-		echo "---------------------------------------------"
 	}>>"$output_dir"/slabinfo.log
 }
 
