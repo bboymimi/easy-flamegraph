@@ -110,7 +110,7 @@ generate_per_cpu_flamegraph() {
 	done <<< "$(grep -Pn '.+\s+\d+\s+\[\d+\] ' "$FILE")"
 
 	# This is the case to handle the last callstack and try to get the last line
-	CURRENT_LINE_NR=$(wc -l "$FILE" | awk '{print $1}')
+	CURRENT_LINE_NR=$(wc -l < "$FILE")
 
 	# echo $CURRENT_LINE_NR
 	# Check the empty file condition that the while loop is skipped
@@ -238,7 +238,7 @@ done
 
 # check if the command line has assign the perf.data file. e.g. '-i xxx.perf.data'
 if [ ! -e "$PERF_REPORT" ]; then
-    if [ x"$PERF_REPORT" = x"" ]; then
+    if [ -z "$PERF_REPORT" ]; then
         # if command didn't assign the perf data, go ahead to check the current folder
 	if [ -e "$(pwd)/perf.data" ]; then
 		PERF_REPORT="$(pwd)/perf.data"
