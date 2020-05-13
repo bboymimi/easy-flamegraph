@@ -3,7 +3,7 @@
 condition_check() {
 	ext=""
 
-	idle_rate=$(mpstat -P ON 1 1| grep -P 'Average:\s+all'| perl -n -e '/Average:\s+all.+\s(\d+)\.(\d+)$/; print $1;')
+	idle_rate=$(mpstat -P ALL 1 1| grep -P 'Average:\s+all'| perl -n -e '/Average:\s+all.+\s(\d+)\.(\d+)$/; print $1;')
 	debug_log "Idle rate: $idle_rate"
 	cpu_rate=$((100-idle_rate))
 	debug_log "CPU threshold: $CPU_THRESHOLD, utilization: $cpu_rate"
