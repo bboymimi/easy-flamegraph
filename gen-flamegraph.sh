@@ -107,7 +107,7 @@ generate_per_cpu_flamegraph() {
 			MAXCPUNR="$PREV_CPU_NR"
 		fi
 
-	done <<< "$(grep -Pn '.+\s+\d+\s+\[\d+\] \d+\.\d+:\s+\d+\scycles:.+' "$FILE")"
+	done <<< "$(grep -Pn '.+\s+\d+\s+\[\d+\] ' "$FILE")"
 
 	# This is the case to handle the last callstack and try to get the last line
 	CURRENT_LINE_NR=$(wc -l "$FILE" | awk '{print $1}')
