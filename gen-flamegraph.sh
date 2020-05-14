@@ -68,7 +68,6 @@ generate_per_cpu_flamegraph() {
 	# 51:swapper     0 [000] 375287.542327:        178 cycles:
 
 	while read -r i; do
-		# echo $i
 
 		# Parse the current line number
 		CURRENT_LINE_NR=$(echo "$i" |grep -Po '^\d+')
@@ -104,11 +103,11 @@ generate_per_cpu_flamegraph() {
 		PREV_CPU_NR=$(echo "$i" | perl -n -e '/\[(\d+)\]/; print $1')
 		# echo CPU_NR:$PREV_CPU_NR
 
-		if ((PREV_CPU_NR > MAXCPUNR)); then
+		if [ "$PREV_CPU_NR" -ge "$MAXCPUNR" ]; then
 			MAXCPUNR="$PREV_CPU_NR"
 		fi
 
-	done <<< "$(grep -Pn '.+\s+\d+\s+\[\d+\] \d+\.\d+:\s+\d+\scycles:\s+' "$FILE")"
+	done <<< "$(grep -Pn '.+\s+\d+\s+\[\d+\] \d+\.\d+:\s+\d+\scycles:.+' "$FILE")"
 
 	# This is the case to handle the last callstack and try to get the last line
 	CURRENT_LINE_NR=$(wc -l "$FILE" | awk '{print $1}')
@@ -128,6 +127,9 @@ generate_per_cpu_flamegraph() {
 			sed -n "$PREV_LINE_NR,${CURRENT_LINE_NR}p" "$FILE" >> "$PCPUSCRIPT"
 			# echo "$PREV_LINE_NR,${CURRENT_LINE_NR}p $FILE >> ${1}.cpu${PREV_CPU_NR}"
 	fi
+
+	# Remove leading 0
+	MAXCPUNR=${MAXCPUNR#0}
 
 	# Finally, generate the flamegraph
 	for ((i = 0; i <= MAXCPUNR; i++)); do
