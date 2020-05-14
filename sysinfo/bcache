@@ -16,6 +16,7 @@ collect_info() {
 		bdev=$(readlink -f "$dev"/bcache | awk -F '/' '{print $(NF-1)}')
 		debug_log "Collect bcache info: $bcache ($bdev)"
 		output_file="$output_dir"/"$bcache".csv
+		output_debug_file="$output_dir"/"$bcache".writeback_rate_debug
 
 		cache_mode=$(awk -F '[' '{print $2}' "$dev"/bcache/cache_mode | awk -F ']' '{print $1}')
 		state=$(cat "$dev"/bcache/state)
@@ -29,11 +30,16 @@ collect_info() {
 		bypassed=$(cat "$dev"/bcache/stats_total/bypassed)
 		cache_hit_ratio=$(cat "$dev"/bcache/stats_total/cache_hit_ratio)
 
+		writeback_rate_debug=$(cat "$dev"/bcache/writeback_rate_debug)
+
 		if ! [ -f "$output_file" ]; then
 			echo "date,cache_mode,state,io_error_limit,sequential_cutoff,writeback_percent,errors,dirty_data,readahead,bypassed,cache_hit_ratio" > "$output_file"
 		fi
 
 		echo "$date_sys,$cache_mode,$state,$io_error_limit,$sequential_cutoff,$writeback_percent,$errors,$dirty_data,$readahead,$bypassed,$cache_hit_ratio" >> "$output_file"
+
+		echo "$date_sys" >> "$output_debug_file"
+		echo "$writeback_rate_debug" >> "$output_debug_file"
 	done
 
 	# collect cache devices info
