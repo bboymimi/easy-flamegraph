@@ -17,6 +17,8 @@ fi
 # source lib
 [ -r "$EASY_FLAME_LIB_DIR"/lib ] && . "$EASY_FLAME_LIB_DIR"/lib
 
+mkdir -p "$EASY_FLAME_LOG_DIR"
+
 # make sure only one process is running
 if ! flock -n "$EASY_FLAME_LOCK" echo "Got lock"; then
 	debug_log "Can not get lock, another process is running"

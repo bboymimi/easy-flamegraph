@@ -34,11 +34,11 @@ fi
 [ -r "$EASY_FLAME_LIB_DIR"/lib ] && . "$EASY_FLAME_LIB_DIR"/lib
 
 if ! "$USE_CPU"; then
-	debug_log "USER_CPU: disabled"
+	debug_log "USE_CPU: disabled"
 	exit 0
 fi
 
-debug_log "USER_CPU: enabled"
+debug_log "USE_CPU: enabled"
 
 APPEND_STRINGS=""
 PERF_DATA="perf.cpu"
