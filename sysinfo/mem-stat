@@ -1,7 +1,7 @@
 #!/bin/bash
 
 collect_info() {
-	output_dir="$EASY_FLAME_OUTPUT"/mem-stat
+	output_dir="$EASY_FLAME_SYSINFO_LOG_DIR"/mem-stat
 	mkdir -p "$output_dir"
 
 	date_sys=$(date '+%Y.%m.%d-%H.%M.%S')
