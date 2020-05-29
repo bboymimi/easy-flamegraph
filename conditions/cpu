@@ -1,18 +1,26 @@
 #!/bin/bash
 
 condition_check() {
-	ext=""
+	local date=""
+	local ext=""
+	local subtitle=""
+	local title="CPU Utilization Flamegraph"
+	local uname=""
 
+	uname="$(uname -r)"
 	idle_rate=$(mpstat -P ALL 1 1| grep -P 'Average:\s+all'| perl -n -e '/Average:\s+all.+\s(\d+)\.(\d+)$/; print $1;')
 	debug_log "Idle rate: $idle_rate"
 	cpu_rate=$((100-idle_rate))
-	debug_log "CPU threshold: $CPU_THRESHOLD, utilization: $cpu_rate"
+	subtitle="$uname CPU threshold: $CPU_THRESHOLD, utilization: $cpu_rate"
+	debug_log "$subtitle"
 
 	# start perf if cpu rate is over threshold
 	if ((cpu_rate >= CPU_THRESHOLD)); then
 		ext="${ext}t${CPU_THRESHOLD}u${cpu_rate}"
 		debug_log "Conditions matched, start perf record"
-		perf_collect "cpu" "$ext" "CPU" "CPU perf" "$USE_CPU_EVENT"
+		date="$(date +%Y-%m-%d_%H%M%S%z)"
+		subtitle="$date $subtitle"
+		perf_collect "cpu" "$ext" "$title" "$subtitle" "$USE_CPU_EVENT"
 	fi
 }
 
