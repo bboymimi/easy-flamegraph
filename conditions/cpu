@@ -16,7 +16,7 @@ condition_check() {
 
 	# start perf if cpu rate is over threshold
 	if ((cpu_rate >= CPU_THRESHOLD)); then
-		ext="${ext}t${CPU_THRESHOLD}u${cpu_rate}"
+		ext="${ext}t${CPU_THRESHOLD}.u${cpu_rate}"
 		debug_log "Conditions matched, start perf record"
 		date="$(date +%Y-%m-%d_%H%M%S%z)"
 		subtitle="$date $subtitle"
