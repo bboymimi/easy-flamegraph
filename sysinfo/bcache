@@ -54,6 +54,7 @@ collect_info() {
 			debug_log "Collect cache info: $cdev"
 			output_file="$output_dir"/"$cdev".csv
 
+			cache_available_percent=$(cat "$cache"/cache_available_percent)
 			block_size=$(cat "$cache"/block_size)
 			btree_cache_size=$(cat "$cache"/btree_cache_size)
 			bucket_size=$(cat "$cache"/bucket_size)
@@ -68,10 +69,10 @@ collect_info() {
 		fi
 
 		if ! [ -f "$output_file" ]; then
-			echo "date,block_size,btree_cache_size,bucket_size,io_error_limi,tree_depth,congested_read_threshold_us,congested_write_threshold_us,congested,io_errors,btree_written,metadata_written" > "$output_file"
+			echo "date,cache_available_percent,block_size,btree_cache_size,bucket_size,io_error_limi,tree_depth,congested_read_threshold_us,congested_write_threshold_us,congested,io_errors,btree_written,metadata_written" > "$output_file"
 		fi
 
-		echo "$date_sys,$block_size,$btree_cache_size,$bucket_size,$io_error_limit,$tree_depth,$congested_read_threshold_us,$congested_write_threshold_us,$congested,$io_errors,$btree_written,$metadata_written" >> "$output_file"
+		echo "$date_sys,$cache_available_percent,$block_size,$btree_cache_size,$bucket_size,$io_error_limit,$tree_depth,$congested_read_threshold_us,$congested_write_threshold_us,$congested,$io_errors,$btree_written,$metadata_written" >> "$output_file"
 	done
 }
 
