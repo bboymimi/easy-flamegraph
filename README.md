@@ -6,12 +6,11 @@ This is utilities used for performance profiling and data analysis.
 
 - [Performance data capturing]()
 - [Flamegraph generation](#flamegraph-generation)
- - [gen-flamegraph.sh](#gen-flamegraph.sh)
+  - [gen-flamegraph.sh](#gen-flamegraphsh)
 
 ## Flamegraph generation
 
 ### gen-flamegraph.sh
-=====================
 This is the wrapper used for the FlameGraph generation. The FlameGraph is invented by Brendan Greg. For more information, please refer to: https://github.com/brendangregg/FlameGraph
 
 At first, you need to profile the system and get the perf.data:
