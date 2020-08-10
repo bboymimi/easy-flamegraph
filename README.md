@@ -11,6 +11,7 @@ This is a light-weight utility used for performance profiling and data analysis.
   - [memory](#memory)
   - [io](#io)
   - [gen-flamegraph.sh](#gen-flamegraphsh)
+    - [per-cpu-flamegraph](#per-cpu-flamegraph)
 
 ## Performance data capturing
 
@@ -146,6 +147,11 @@ Use the /home/ubuntu/perf-utils/perf.data as the source of the FlameGraph.
 # $ firefox /home/ubuntu/perf-output/2017-08-16_09:59:32.perf.data.foldedSssh.svg
 
 ```
+
+#### Per-cpu flamegraph
+Sometimes, the per-cpu flamegraph is useful to identify if a specific process is hogging on a CPU. In this case, looking at the `top` or ```mpstat -P ALL 1``` by looking at the average CPU usage would be misleading.
+
+```$ sudo ./gen-flamegraph.sh -p true```
 
 Read the help page to get more detail:
 
