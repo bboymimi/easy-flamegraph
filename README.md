@@ -1,8 +1,16 @@
-# Linux Flamegraph Utilities
+# Linux Performance and Data Analysis Utilities
 
-Utilities used for performance profiling.
+This is utilities used for performance profiling and data analysis.
 
-1\. easy-flamegraph.sh
+## Table of Contents
+
+- [Performance data capturing]()
+- [Flamegraph generation](#flamegraph-generation)
+ - [gen-flamegraph.sh](#gen-flamegraph.sh)
+
+## Flamegraph generation
+
+### gen-flamegraph.sh
 =====================
 This is the wrapper used for the FlameGraph generation. The FlameGraph is invented by Brendan Greg. For more information, please refer to: https://github.com/brendangregg/FlameGraph
 
@@ -16,19 +24,19 @@ $ sudo perf record -a --call-graph dwarf
 $ sudo perf record -a -g
 ```
 
-By default, easy-flamegraph.sh will read the perf.data under the current folder or you can assign the perf.data by \"-i\":
+By default, gen-flamegraph.sh will read the perf.data under the current folder or you can assign the perf.data by \"-i\":
 
 It's preferred to add the \"sudo\" as reading the /proc/kallsyms need the root privilege if the kernel debug symbol isn't installed.
 
 ```
 $ git clone https://github.com/bboymimi/perf-utils.git
-$ sudo easy-flamegraph.sh -i perf.data
+$ sudo gen-flamegraph.sh -i perf.data
 ```
 
 Or grep the specific string you are interested to generate the FlameGraph:
 
 ```
-$ sudo ./easy-flamegraph.sh -g ssh
+$ sudo ./gen-flamegraph.sh -g ssh
 Use the /home/ubuntu/perf-utils/perf.data as the source of the FlameGraph.
 ###########
 # The perf interactive .svg graph "/home/ubuntu/perf-output/2017-08-16_09:59:32.perf.data.foldedSssh.svg" has been generated.
@@ -43,10 +51,16 @@ Use the /home/ubuntu/perf-utils/perf.data as the source of the FlameGraph.
 Read the help page to get more detail:
 
 ```
-$ ./easy-flamegraph.sh -h
-usage: ./easy-flamegraph.sh -g <grep string to make specific flamegraph> -i <perf file> -k <kernel version #>
+$ ./gen-flamegraph.sh -h
+usage: ./gen-flamegraph.sh -g <grep string to make specific flamegraph> -i <perf file> -k <kernel version #>
+        d - drop the perf related data(include perf.data!!) and keep the .svg flamegraph file to save space
+        g - grep strings - to grep specific strings e.g., kworker, to make flamegraph
         i - perf report file
         k - kernel version - specific kernel version number
-        g - grep strings - to grep specific strings e.g., kworker, to make flamegraph
-        t - tar the /home/ubuntu/perf-output/
+        o - output directory - the output directory to save the .svg/script file
+        s - symfs - to assign the directory to search for the debug symbol of kernel modules
+        t - tar the /home/vin/os/easy-flamegraph/perf-output/
+        p - generate the flamegraph for each CPU
+        subtitle - the subtitle of the framegraph
+        title - the title of the framegraph
 ```
