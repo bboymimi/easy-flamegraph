@@ -17,6 +17,7 @@ After git clone the repo, the tool can be installed to the system by:
 $ sudo make install
 
 Then, the code will be put under:
+
 $ ls /usr/lib/easy-flamegraph/
 conditions  entry  ezcli  FlameGraph  gen-flamegraph.sh  lib  perf-output  sysinfo
 
