@@ -168,7 +168,7 @@ usage_function() {
 	    echo "	o - output directory - the output directory to save the .svg/script file"
             echo "	s - symfs - to assign the directory to search for the debug symbol of kernel modules"
             echo "	t - tar the $FPERF"
-	    echo "	per-cpu-flamegraph - generate the flamegraph for each CPU"
+	    echo "	p - generate the flamegraph for each CPU"
 	    echo "	subtitle - the subtitle of the framegraph"
 	    echo "	title - the title of the framegraph"
 }
