@@ -1,12 +1,46 @@
 # Linux Performance and Data Analysis Utilities
 
-This is utilities used for performance profiling and data analysis.
+This is a light-weight utility used for performance profiling and data analysis.
 
 ## Table of Contents
 
-- [Performance data capturing]()
+- [Performance data capturing](#performance-data-capturing)
+  - [easy-flamegraph configuration](#easy-flamegraph-configuration)
 - [Flamegraph generation](#flamegraph-generation)
   - [gen-flamegraph.sh](#gen-flamegraphsh)
+
+## Performance data capturing
+
+The performance data capturing is currently based on Perf. By default, it will profile per-minute for one second period to capture the CPU/Memory/IO realated perf event data. Then, the log data will be translated to the files with specific formats(csv,tsv...) for further analysis(ScatterPlot/Flamegraph/LineChart...etc.).
+
+After git clone the repo, the tool can be installed to the system by:
+$ sudo make install
+
+Then, the code will be put under:
+$ ls /usr/lib/easy-flamegraph/
+conditions  entry  ezcli  FlameGraph  gen-flamegraph.sh  lib  perf-output  sysinfo
+
+The periodic sampling is implemented in the crontab config:
+$ cat /etc/cron.d/easy-flamegraph-cron
+\# Flamegraph-mem sample in 1 minute period
+\*/1 * * * * root /usr/lib/easy-flamegraph/entry > /dev/null
+
+
+### easy-flamegraph configuration
+The configuration file is /etc/default/easy-flamegraph.conf.
+
+There are global settings which can apply to each subsystems(cpu/mem/io...). And the name is started with G.
+
+e.g.
+\# Specify the sampling rate
+G_SRATE=99
+
+\# Specify PID for perf record
+G_PID=
+
+\# How many seconds perf record should run
+G_PERF_PERIOD=1
+
 
 ## Flamegraph generation
 
