@@ -4,7 +4,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListSubheader from '@material-ui/core/ListSubheader';
 import DashboardIcon from '@material-ui/icons/Dashboard';
-import LaptopChromebookIcon from '@material-ui/icons/LaptopChromebook';
+import { PackageVariantIcon } from '@icons/material';
 import PeopleIcon from '@material-ui/icons/People';
 import BarChartIcon from '@material-ui/icons/BarChart';
 import LayersIcon from '@material-ui/icons/Layers';
@@ -14,9 +14,9 @@ export const mainListItems = (
   <div>
     <ListItem button>
       <ListItemIcon>
-        <LaptopChromebookIcon />
+        <PackageVariantIcon />
       </ListItemIcon>
-      <ListItemText primary="Nodes" />
+      <ListItemText primary="Projects" />
     </ListItem>
     <ListItem button>
       <ListItemIcon>
