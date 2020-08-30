@@ -1,12 +1,12 @@
 import React from 'react';
 import { HashRouter, Route, Switch } from 'react-router-dom';
-import Dashboard from './components/dashboard/Dashboard';
+import Layout from './components/Layout';
 
 
 function App() {
   return (
 	  <div>
-	    <Dashboard />
+	    <Layout />
 	  </div>
   );
 }
