@@ -1,4 +1,5 @@
 import React from 'react';
+import { BrowserRouter as Router, HashRouter, Switch, Route } from 'react-router-dom'
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -26,6 +27,8 @@ import Scatterv5 from './Scatterv5';
 import Button from '@material-ui/core/Button';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
+import Projects from './Projects';
+import Memory from './dashboard/Memory';
 
 function Copyright() {
   return (
@@ -140,6 +143,7 @@ export default function Layout() {
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
 
   return (
+  <Router>
     <div className={classes.root}>
       <CssBaseline />
       <AppBar
@@ -235,27 +239,13 @@ export default function Layout() {
         <div className={classes.appBarSpacer} />
         <Container maxWidth="lg" className={classes.container}>
           <Grid container spacing={3}>
-            {/* Chart */}
-            <Grid item xs={12} md={8} lg={9}>
-              <Paper className={fixedHeightPaper}>
-                <Chart />
-              </Paper>
-            </Grid>
-            <Grid item xs={12} md={8} lg={9}>
-              <Paper>
-	        <Scatter />
-              </Paper>
-            </Grid>
-            <Grid item xs={12} md={8} lg={9}>
-              <Paper>
-	        <Scatterv5 />
-              </Paper>
-            </Grid>
-            <Grid item xs={12} md={8} lg={9}>
-              <Paper>
-	        <BarChart data={[5,10,1,3]} size={[500,500]} />
-              </Paper>
-            </Grid>
+	    <Switch>
+	      <React.Suspense fallback={<div>Loading...</div>}>
+	        <Route exact path="/" component={Projects} />
+	        <Route exact path="/projects" component={Projects} />
+	        <Route exact path="/dashboard" component={Memory} />
+	      </React.Suspense>
+	    </Switch>
           </Grid>
           <Box pt={4}>
             <Copyright />
@@ -263,5 +253,6 @@ export default function Layout() {
         </Container>
       </main>
     </div>
+  </Router>
   );
 }
