@@ -13,7 +13,7 @@ class Scatter extends Component {
       this.createScatter()
    }
    componentDidUpdate() {
-      this.createScatter()
+      //this.createScatter()
    }
    createScatter() {
       const node = this.node
