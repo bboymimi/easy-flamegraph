@@ -143,7 +143,7 @@ export default function Layout() {
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
 
   return (
-  <Router>
+  <HashRouter>
     <div className={classes.root}>
       <CssBaseline />
       <AppBar
@@ -253,6 +253,6 @@ export default function Layout() {
         </Container>
       </main>
     </div>
-  </Router>
+  </HashRouter>
   );
 }
