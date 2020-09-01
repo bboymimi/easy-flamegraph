@@ -29,6 +29,8 @@ import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import Projects from './Projects';
 import Memory from './dashboard/Memory';
+import DashboardBar from './navbar/DashboardBar';
+import ProjectsBar from './navbar/ProjectsBar';
 
 function Copyright() {
   return (
@@ -131,15 +133,6 @@ export default function Layout() {
   const handleDrawerClose = () => {
     setOpen(false);
   };
-  const [anchorEl, setAnchorEl] = React.useState(null);
-
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
 
   return (
@@ -163,48 +156,12 @@ export default function Layout() {
           >
             <MenuIcon />
           </IconButton>
-	  <Button aria-controls="simple-menu" aria-haspopup="true" onClick={handleClick} color="inherit">
-            CPU
-          </Button>
-          <Menu
-            id="simple-menu"
-            anchorEl={anchorEl}
-            keepMounted
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
-          >
-            <MenuItem onClick={handleClose}>MenuItem 1</MenuItem>
-            <MenuItem onClick={handleClose}>MenuItem 2</MenuItem>
-            <MenuItem onClick={handleClose}>MenuItem 3</MenuItem>
-          </Menu>
-	  <Button aria-controls="simple-menu" aria-haspopup="true" onClick={handleClick} color="inherit">
-            Memory
-          </Button>
-          <Menu
-            id="simple-menu"
-            anchorEl={anchorEl}
-            keepMounted
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
-          >
-            <MenuItem onClick={handleClose}>MenuItem 1</MenuItem>
-            <MenuItem onClick={handleClose}>MenuItem 2</MenuItem>
-            <MenuItem onClick={handleClose}>MenuItem 3</MenuItem>
-          </Menu>
-	  <Button aria-controls="simple-menu" aria-haspopup="true" onClick={handleClick} color="inherit">
-            IO
-          </Button>
-          <Menu
-            id="simple-menu"
-            anchorEl={anchorEl}
-            keepMounted
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
-          >
-            <MenuItem onClick={handleClose}>MenuItem 1</MenuItem>
-            <MenuItem onClick={handleClose}>MenuItem 2</MenuItem>
-            <MenuItem onClick={handleClose}>MenuItem 3</MenuItem>
-          </Menu>
+	  <Switch>
+	    <React.Suspense fallback={<div>Loading...</div>}>
+	      <Route exact path="/projects" component={ProjectsBar} />
+	      <Route exact path="/dashboard" component={DashboardBar} />
+	    </React.Suspense>
+	  </Switch>
           <Typography
             component="h1"
             variant="h6"
