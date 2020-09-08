@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import Table from '@material-ui/core/Table';
@@ -111,8 +111,37 @@ export default function Projects() {
   const classes = useStyles2();
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(20);
+  const [projects, setProjects] = React.useState({ filename: "", type: ""});
 
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage);
+
+
+  useEffect(() => {
+  fetch('/profile/')
+    .then(res => res.json())
+    .then(data => setProjects(data))
+
+    /*
+     * // For debugging
+     * console.log("use effect!");
+     * console.log(projects);
+     * console.log(rows);
+     */
+
+  }, []);
+
+  /*
+   * // For debugging purpose to print out the information when "projects" is modified.
+   * useEffect(() => {
+   *   console.log("use effect2!");
+   *   console.log(projects);
+   *   console.log("page:", page, "rowsPerPage:", rowsPerPage);
+   *   console.log(Object.entries(projects).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage));
+   *   console.log(Object.entries(projects).slice(3, 5));
+   *   console.log(Object.entries(projects).slice(3, 5).map(row => console.log(row[1].filename)));
+   *   console.log(rows.slice(3, 5));
+   * }, [projects]);
+   */
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -128,18 +157,15 @@ export default function Projects() {
       <Table className={classes.table} aria-label="custom pagination table">
         <TableBody>
           {(rowsPerPage > 0
-            ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-            : rows
+            ? Object.entries(projects).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+            : Object.entries(projects)
           ).map((row) => (
-            <TableRow key={row.name} hover={true} component={Link} to={`/projects/${row.name}`} >
+            <TableRow key={row[1].filename} hover={true} component={Link} to={`/projects/${row[1].filename}`} >
               <TableCell component="th" scope="row">
-                {row.name}
+                {row[1].filename}
               </TableCell>
               <TableCell style={{ width: 160 }} align="right">
-                {row.calories}
-              </TableCell>
-              <TableCell style={{ width: 160 }} align="right">
-                {row.fat}
+                {row[1].type}
               </TableCell>
             </TableRow>
           ))}
@@ -155,7 +181,7 @@ export default function Projects() {
             <TablePagination
               rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
               colSpan={3}
-              count={rows.length}
+              count={projects.length}
               rowsPerPage={rowsPerPage}
               page={page}
               SelectProps={{
