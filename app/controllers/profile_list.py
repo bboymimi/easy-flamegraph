@@ -17,26 +17,17 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from os import walk
-from os.path import join
+from os import listdir
+from os.path import join, isdir
 
 from app import config
-from app.common.fileutil import get_profile_type
 
 
 # get profile files
 def get_profile_list():
     all_files = []
-    for root, dirs, files in walk(join(config.PROFILE_DIR)):
-        start = root[len(config.PROFILE_DIR) + 1:]
-        for f in files:
-            if not f.startswith('.'):
-                filename = join(start, f)
-                file_path = join(config.PROFILE_DIR, filename)
-                file_type = get_profile_type(file_path)
-                all_files.append({
-                    'filename': filename,
-                    'type': file_type
-                })
+    for file in listdir(config.PROFILE_DIR):
+        if isdir(join(config.PROFILE_DIR, file)):
+            all_files.append({'projectname': file})
 
     return all_files

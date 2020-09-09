@@ -111,7 +111,7 @@ export default function Projects() {
   const classes = useStyles2();
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(20);
-  const [projects, setProjects] = React.useState({ filename: "", type: ""});
+  const [projects, setProjects] = React.useState({ projectname: "" });
 
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage);
 
@@ -138,7 +138,7 @@ export default function Projects() {
    *   console.log("page:", page, "rowsPerPage:", rowsPerPage);
    *   console.log(Object.entries(projects).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage));
    *   console.log(Object.entries(projects).slice(3, 5));
-   *   console.log(Object.entries(projects).slice(3, 5).map(row => console.log(row[1].filename)));
+   *   console.log(Object.entries(projects).slice(3, 5).map(row => console.log(row[1].projectname)));
    *   console.log(rows.slice(3, 5));
    * }, [projects]);
    */
@@ -160,12 +160,9 @@ export default function Projects() {
             ? Object.entries(projects).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
             : Object.entries(projects)
           ).map((row) => (
-            <TableRow key={row[1].filename} hover={true} component={Link} to={`/projects/${row[1].filename}`} >
+            <TableRow key={row[1].projectname} hover={true} component={Link} to={`/dashboard/${row[1].projectname}`} >
               <TableCell component="th" scope="row">
-                {row[1].filename}
-              </TableCell>
-              <TableCell style={{ width: 160 }} align="right">
-                {row[1].type}
+                {row[1].projectname}
               </TableCell>
             </TableRow>
           ))}
