@@ -1,7 +1,10 @@
 {
-  "name": "my-scratch",
+  "name": "easy-flamegraph",
   "version": "0.1.0",
-  "private": true,
+  "main": "build/index.html",
+  "repository": "https://github.com/bboymimi/easy-flamegraph.git",
+  "author": "Gavin Guo <gavin.guo@canonical.com>",
+  "license": "Apache-2.0",
   "dependencies": {
     "@icons/material": "^0.4.1",
     "@material-ui/core": "^4.11.0",
@@ -22,22 +25,32 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "eject": "react-scripts eject",
+    "dev": "concurrently \"python run.py\" \"NODE_ENV=development webpack-dev-server --hot --mode=development\"",
+    "webpack-watch": "NODE_ENV=development webpack --watch --mode development",
+    "webpack-server": "NODE_ENV=development webpack-dev-server --hot --mode development",
+    "webpack": "NODE_ENV=production webpack --mode production",
+    "eslintInit": "eslint --init",
+    "lint": "eslint src/. --ext .js --ext .jsx"
   },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "devDependencies": {
+    "@babel/preset-env": "^7.11.5",
+    "@babel/preset-react": "^7.10.4",
+    "babel-core": "^6.26.3",
+    "babel-loader": "^8.1.0",
+    "concurrently": "^5.3.0",
+    "css-loader": "^4.3.0",
+    "eslint": "^7.9.0",
+    "eslint-loader": "^4.0.2",
+    "file-loader": "^6.1.0",
+    "html-webpack-plugin": "^4.4.1",
+    "less-loader": "^7.0.1",
+    "mini-css-extract-plugin": "^0.11.2",
+    "style-loader": "^1.2.1",
+    "url-loader": "^4.1.0",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.0"
   }
 }
