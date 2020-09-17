@@ -90,8 +90,8 @@ class FlameGraph extends Component {
 
     componentDidUpdate(prevProps) {
         if (
-            this.props.location.search !== prevProps.location.search || 
-            this.props.match.params !== prevProps.match.params ||
+            //this.props.location.search !== prevProps.location.search ||
+            //this.props.match.params !== prevProps.match.params ||
             this.props.compare !== prevProps.compare
         ) {
             select('#flamegraph').selectAll('svg').remove()
@@ -100,7 +100,7 @@ class FlameGraph extends Component {
     }
 
     executeQuery() {
-        const { type, filename, start, end, compareType, compareFilename, compareStart, compareEnd } = this.props.match.params
+        const { type, filename, start, end, compareType, compareFilename, compareStart, compareEnd } = this.props
         const { compare } = this.props
         const { packageName } = this.state
 
@@ -234,7 +234,7 @@ class FlameGraph extends Component {
     }
 
     handleCompareClick() {
-        const { type, filename, start, end } = this.props.match.params
+        const { type, filename, start, end } = this.props
 
         let url = `/#/compare/${type}/${filename}`
 
@@ -246,7 +246,7 @@ class FlameGraph extends Component {
     }
 
     handleFlipClick() {
-        const { type, filename, start, end, compareType, compareFilename, compareStart, compareEnd } = this.props.match.params
+        const { type, filename, start, end, compareType, compareFilename, compareStart, compareEnd } = this.props
         const { compare } = this.props
 
         let url = `/${compare}/${compareType}/${compareFilename}`
@@ -263,7 +263,7 @@ class FlameGraph extends Component {
 
 
     handleElidedDifferentialFlipClick() {
-        const { type, filename, start, end, compareType, compareFilename, compareStart, compareEnd } = this.props.match.params
+        const { type, filename, start, end, compareType, compareFilename, compareStart, compareEnd } = this.props
         const { compare } = this.props
 
         let url = `/${compare === 'differential' ? 'elided' : 'differential'}/${type}/${filename}`
@@ -279,7 +279,7 @@ class FlameGraph extends Component {
     }
 
     render() {
-        const { type } = this.props.match.params
+        const { type } = this.props
         const searchButton = 
         <Button inverted color='red' size='small' onClick={this.handleSearchClick}>
             <Button.Content>Search</Button.Content>
@@ -385,7 +385,7 @@ FlameGraph.propTypes = {
     compare: PropTypes.string,
     location: PropTypes.object.isRequired,
     history: PropTypes.object.isRequired,
-    match: PropTypes.object.isRequired,
+    //match: PropTypes.object.isRequired,
 }
 
 const mapStateToProps = () => {

@@ -194,8 +194,7 @@ export default function Layout() {
       </Drawer>
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />
-        <Container maxWidth="lg" className={classes.container}>
-          <Grid container spacing={3}>
+        <Container maxWidth={false} className={classes.container}>
 	    <Switch>
 	      <React.Suspense fallback={<div>Loading...</div>}>
 	        <Route exact path="/" component={Projects} />
@@ -203,7 +202,6 @@ export default function Layout() {
 	        <Route exact path="/dashboard" component={Memory} />
 	      </React.Suspense>
 	    </Switch>
-          </Grid>
           <Box pt={4}>
             <Copyright />
           </Box>

@@ -7,6 +7,7 @@ import Chart from '../Chart';
 import BarChart from '../BarChart';
 import Scatter from '../Scatter';
 import Scatterv5 from '../Scatterv5';
+import { FlameGraph } from '../../components'
 
 //const Memory = () => (
 class Memory extends Component {
@@ -27,11 +28,10 @@ class Memory extends Component {
       <div>
           <Scatter />
           <Scatterv5 />
-      <Grid item xs={12} md={8} lg={9}>
+	  <FlameGraph type={"perf"} filename={"numad-perf.script"} />
         <Paper>
           <BarChart data={[5,10,1,3]} size={[500,500]} />
         </Paper>
-      </Grid>
       </div>
     );
   }

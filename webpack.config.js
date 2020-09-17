@@ -93,6 +93,9 @@ module.exports = {
       '/profile/**': {
         target: 'http://localhost:5000',
       },
+      '/flamegraph/**': {
+        target: 'http://localhost:5000',
+      },
     },
   },
 };
