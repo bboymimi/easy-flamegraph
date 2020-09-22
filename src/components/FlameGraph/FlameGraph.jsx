@@ -92,6 +92,7 @@ class FlameGraph extends Component {
         if (
             //this.props.location.search !== prevProps.location.search ||
             //this.props.match.params !== prevProps.match.params ||
+            this.props.filename !== prevProps.filename ||
             this.props.compare !== prevProps.compare
         ) {
             select('#flamegraph').selectAll('svg').remove()
