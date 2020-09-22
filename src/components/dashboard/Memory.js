@@ -7,6 +7,7 @@ import Chart from '../Chart';
 import BarChart from '../BarChart';
 import Scatter from '../Scatter';
 import Scatterv5 from '../Scatterv5';
+import Line from '../Line';
 import { FlameGraph } from '../../components'
 
 //const Memory = () => (

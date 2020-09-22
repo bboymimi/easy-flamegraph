@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import * as d3 from 'd3'
+import * as d3 from 'd3v5'
 import * as d3lasso from 'd3-lasso'
 //import { lasso } from 'd3-lasso'
 import './Scatterv5.css'
