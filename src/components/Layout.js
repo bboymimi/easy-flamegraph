@@ -159,7 +159,7 @@ export default function Layout() {
 	  <Switch>
 	    <React.Suspense fallback={<div>Loading...</div>}>
 	      <Route exact path="/projects" component={ProjectsBar} />
-	      <Route exact path="/dashboard" component={DashboardBar} />
+	      <Route exact path="/dashboard/:projectname" component={DashboardBar} />
 	    </React.Suspense>
 	  </Switch>
           <Typography
@@ -199,7 +199,7 @@ export default function Layout() {
 	      <React.Suspense fallback={<div>Loading...</div>}>
 	        <Route exact path="/" component={Projects} />
 	        <Route exact path="/projects" component={Projects} />
-	        <Route exact path="/dashboard" component={Memory} />
+	        <Route exact path="/dashboard/:projectname" component={Memory} />
 	      </React.Suspense>
 	    </Switch>
           <Box pt={4}>

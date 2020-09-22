@@ -14,21 +14,49 @@ class Memory extends Component {
   constructor(props){
     super(props)
     //this.createScatter = this.createScatter.bind(this)
+
+    this.changeState = this.changeState.bind(this)
+    this.changeState2 = this.changeState2.bind(this)
+    this.state = {
+      pname: '',
+      value: 'test/numad-perf.script',
+      value2: 'examples/perf.data.kvm.svg'
+    };
   }
   componentDidMount() {
     //this.createScatter()
+    const { projectname } = this.props.match.params;
+    console.log(projectname);
+    this.setState({pname: projectname});
+    console.log("this.state." + this.state.pname);
   }
   componentDidUpdate() {
     //this.createScatter()
+  }
+
+  changeState() {
+    const set_value = this.state.value === 'test/perf.stacks01' ?
+      'test/numad-perf.script' : 'test/perf.stacks01';
+    this.setState({ value: set_value });
+  }
+
+  changeState2() {
+    const set_value = this.state.value2 === 'examples/perf.data.kvm.svg' ?
+      'examples/pagesteal.svg' : 'examples/perf.data.kvm.svg';
+    this.setState({ value2: set_value });
   }
 
         //<Paper className={fixedHeightPaper}>
   render() {
     return (
       <div>
+          <Line />
+	  <div>
+	    <div onClick={this.changeState}>{this.state.value}</div>
+	  <FlameGraph type={"perf"} filename={this.state.value} />
+	  </div>
           <Scatter />
           <Scatterv5 />
-	  <FlameGraph type={"perf"} filename={"numad-perf.script"} />
         <Paper>
           <BarChart data={[5,10,1,3]} size={[500,500]} />
         </Paper>
