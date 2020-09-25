@@ -32,6 +32,7 @@ class Line extends Component {
 
         function(data){
                 data.forEach(d => d.date = d3.timeParse("%Y-%m-%d")(d.date));
+		data = Object.assign(data, {y: "$ Close"});
                 return data;
 
       }).then(
@@ -53,7 +54,13 @@ class Line extends Component {
       .range([ height, 0 ]);
 
     var yAxis = svg.append("g")
-      .call(d3.axisLeft(y));
+      .call(d3.axisLeft(y))
+      .call(g => g.select(".domain").remove())
+      .call(g => g.select(".tick:last-of-type text").clone()
+        .attr("x", 3)
+        .attr("text-anchor", "start")
+        .attr("font-weight", "bold")
+        .text(data.y))
 
     // Add a clipPath: everything out of this area won't be drawn.
     var clip = svg.append("defs").append("svg:clipPath")
@@ -101,6 +108,75 @@ class Line extends Component {
         .attr("class", "brush")
         .call(brush);
 
+    const tooltip = svg.append("g");
+
+    svg.on("touchmove mousemove", function(event) {
+      const {date, value} = bisect(d3.pointer(event, this)[0]);
+
+      tooltip
+        .attr("transform", `translate(${x(date)},${y(value)})`)
+        .call(callout, `${formatValue(value)} ${formatDate(date)}`);
+    });
+
+    svg.on("touchend mouseleave", () => tooltip.call(callout, null));
+
+    function bisect(mx) {
+      const bisect_r = d3.bisector(d => d.date).left;
+      const date = x.invert(mx);
+      const index = bisect_r(data, date, 1);
+      const a = data[index - 1];
+      const b = data[index];
+      return b && (date - a.date > b.date - date) ? b : a;
+    };
+
+    function callout(g, value) {
+      if (!value) return g.style("display", "none");
+
+      g
+        .style("display", null)
+        .style("pointer-events", "none")
+        .style("font", "10px sans-serif");
+
+      const path = g.selectAll("path")
+        .data([null])
+        .join("path")
+          .attr("fill", "white")
+          .attr("stroke", "black");
+
+      const text = g.selectAll("text")
+        .data([null])
+        .join("text")
+        .call(text => text
+          .selectAll("tspan")
+          .data((value + "").split(/\n/))
+          .join("tspan")
+            .attr("x", 0)
+            .attr("y", (d, i) => `${i * 1.1}em`)
+            .style("font-weight", (_, i) => i ? null : "bold")
+            .text(d => d));
+
+      const {x, y, width: w, height: h} = text.node().getBBox();
+
+      text.attr("transform", `translate(${-w / 2},${15 - y})`);
+      path.attr("d", `M${-w / 2 - 10},5H-5l5,-5l5,5H${w / 2 + 10}v${h + 20}h-${w + 20}z`);
+    }
+
+    function formatValue(value) {
+      return value.toLocaleString("en", {
+        style: "currency",
+        currency: "USD"
+      });
+    }
+
+    function formatDate(date) {
+      return date.toLocaleString("en", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "UTC"
+      });
+    }
+
     // A function that set idleTimeOut to null
     var idleTimeout
     function idled() { idleTimeout = null; }
@@ -109,7 +185,7 @@ class Line extends Component {
     function updateChart() {
 
       // What are the selected boundaries?
-      var extent = d3.event.selection
+      var extent = d3.brushSelection(this);
 
       // If no selection, back to initial coordinate. Otherwise, update X axis domain
       if(!extent){
