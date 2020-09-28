@@ -37,7 +37,7 @@ class Line extends Component {
 
       }).then(
 
-      function(data) {
+      (data) => {
 
       // Add X axis --> it is a date format
       var x = d3.scaleTime()
@@ -109,6 +109,16 @@ class Line extends Component {
         .call(brush);
 
     const tooltip = svg.append("g");
+
+
+    svg.on("click", (event) => {
+      const { changeState } = this.props;
+      changeState();
+      const {date, value} = bisect(d3.pointer(event, this)[0]);
+
+      console.log(`${formatValue(value)} ${formatDate(date)}`);
+      console.log(`${value} ${date}`);
+    });
 
     svg.on("touchmove mousemove", function(event) {
       const {date, value} = bisect(d3.pointer(event, this)[0]);
@@ -216,8 +226,8 @@ class Line extends Component {
           )
     }
 
-    // If user double click, reinitialize the chart
-    svg.on("dblclick",function(){
+    // If user right click, reinitialize the chart
+    svg.on("contextmenu",function(){
       x.domain(d3.extent(data, function(d) { return d.date; }))
       xAxis.transition().call(d3.axisBottom(x))
       line
@@ -234,6 +244,9 @@ class Line extends Component {
           .x(function(d) { return x(d.date) })
           .y(function(d) { return y(d.value) - 50})
       )
+      // prevent the webserver right-click menu
+      event.preventDefault();
+
     });
 
       })

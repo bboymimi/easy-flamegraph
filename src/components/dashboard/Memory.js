@@ -51,7 +51,7 @@ class Memory extends Component {
   render() {
     return (
       <div>
-          <Line />
+          <Line changeState={this.changeState}/>
 	  <div>
 	    <div onClick={this.changeState}>{this.state.value}</div>
 	  <FlameGraph type={"perf"} filename={this.state.value} />
