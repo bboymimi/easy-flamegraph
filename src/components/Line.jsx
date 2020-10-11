@@ -114,7 +114,7 @@ class Line extends Component {
     svg.on("click", (event) => {
       const { changeState } = this.props;
       changeState();
-      const {date, value} = bisect(d3.pointer(event, this)[0]);
+      const {date, value} = bisect(d3.pointer(event)[0]);
 
       console.log(`${formatValue(value)} ${formatDate(date)}`);
       console.log(`${value} ${date}`);
