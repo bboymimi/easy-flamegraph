@@ -28,10 +28,10 @@ class Line extends Component {
           "translate(" + margin.left + "," + margin.top + ")");
 
     //Read the data
-    d3.csv("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/3_TwoNumOrdered_comma.csv").then(
+    d3.csv("./examples/test/memory/memfree.csv").then(
 
         function(data){
-                data.forEach(d => d.date = d3.timeParse("%Y-%m-%d")(d.date));
+                data.forEach(d => { d.date = d3.timeParse("%Y-%m-%d-%H:%M:%S")(d.date) });
 		data = Object.assign(data, {y: "$ Close"});
                 return data;
 
@@ -183,6 +183,9 @@ class Line extends Component {
         month: "short",
         day: "numeric",
         year: "numeric",
+	hour: "numeric",
+	minute: "numeric",
+	second: "numeric",
         timeZone: "UTC"
       });
     }
