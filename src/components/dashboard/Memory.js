@@ -10,6 +10,11 @@ import Scatterv5 from '../Scatterv5';
 import Line from '../Line';
 import { FlameGraph } from '../../components'
 
+const divStyle = {
+  display: 'flex',
+  alignItems: 'center'
+};
+
 //const Memory = () => (
 class Memory extends Component {
   constructor(props){
@@ -51,13 +56,18 @@ class Memory extends Component {
   render() {
     return (
       <div>
+	  <div style={divStyle}>
           <Line changeState={this.changeState}/>
+          <Line changeState={this.changeState}/>
+	  </div>
 	  <div>
 	    <div onClick={this.changeState}>{this.state.value}</div>
 	  <FlameGraph type={"perf"} filename={this.state.value} />
 	  </div>
-          <Scatter />
-          <Scatterv5 />
+	  <div style={divStyle}>
+            <Scatter />
+            <Scatterv5 />
+	  </div>
         <Paper>
           <BarChart data={[5,10,1,3]} size={[500,500]} />
         </Paper>
