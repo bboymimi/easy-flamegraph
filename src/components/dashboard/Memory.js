@@ -71,6 +71,10 @@ class Memory extends Component {
         <Paper>
           <BarChart data={[5,10,1,3]} size={[500,500]} />
         </Paper>
+	  <p>
+	    <div onClick={this.changeState2}>{this.state.value2}</div>
+	  <object data={this.state.value2} type="image/svg+xml" width="1200" height="822"> </object>
+	  </p>
       </div>
     );
   }

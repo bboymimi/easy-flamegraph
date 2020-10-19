@@ -40,7 +40,7 @@ from app.views.elided import MOD_ELIDED_FLAME_GRAPH
 from flask import Flask, jsonify
 
 APP = Flask(__name__,
-            static_folder=os.getcwd() + '/build',
+            static_folder=os.getcwd() + '/app/public',
             static_url_path='')
 
 APP.config.from_pyfile('config.py', silent=True)

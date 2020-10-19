@@ -116,7 +116,7 @@ class Scatterv5 extends Component {
     // Init the lasso on the svg:g that contains the dots
     svg.call(lasso);
 
-    d3.tsv("./data.tsv").then(function(data) {
+    d3.tsv("./build/data.tsv").then(function(data) {
       console.log(JSON.stringify(data.length));
       console.log(data.map(function(d) { return d.sepalLength }));
       //for (var i = 0; i < data.length; i++) {
