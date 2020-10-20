@@ -59,7 +59,7 @@ perf_collect() {
 	elif "$G_KEEP_TAR"; then
 		KEEP_SVG_OPTION="-t"
 	else
-		KEEP_SVG_OPTION="-d"
+		KEEP_SVG_OPTION=""
 	fi	
 
 	# set perf command
