@@ -34,12 +34,12 @@ debug_log "System: $DATE_SYS"
 debug_log "UTC: $DATE_UTC"
 
 # check if the required tool(s) is installed. e.g. linux-tools-common.
-required_tools_checking linux-tools-common
-required_tools_checking linux-tools-"$(uname -r)"
-required_tools_checking binutils
-required_tools_checking zip
-required_tools_checking sysstat
-required_tools_checking bcache-tools
+required_tools_checking linux-tools-common "$USE_EASY_FLAMEGRAPH"
+required_tools_checking linux-tools-"$(uname -r)" "$USE_EASY_FLAMEGRAPH"
+required_tools_checking binutils "$USE_EASY_FLAMEGRAPH"
+required_tools_checking zip "$USE_EASY_FLAMEGRAPH"
+required_tools_checking sysstat "$USE_SYSINFO_PERIODICALLY"
+required_tools_checking bcache-tools "$USE_BCACHE"
 
 # check configurations
 # -t is to tar the intermediate files which is conflicted with the --keep-svg

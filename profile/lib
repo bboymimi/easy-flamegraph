@@ -21,6 +21,12 @@ debug_log() {
 }
 
 required_tools_checking() {
+	# return if the component needs the package is not enabled
+	if ! "$2"; then
+		debug_log "Ignore the installation of: $1"
+		return
+	fi
+
 	# exit if required package is not installed
 	CHK_PKG=$(dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -c "ok installed")
 	if [ "$CHK_PKG" -eq 0 ]; then
