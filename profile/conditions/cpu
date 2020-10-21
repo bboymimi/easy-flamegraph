@@ -60,10 +60,6 @@ if [ -z "$EASY_FLAME_PERF_DIR" ]; then
 	exit 1
 fi
 
-debug_log "Clear perf output"
-mkdir -p "$EASY_FLAME_PERF_DIR"
-rm -rf "${EASY_FLAME_PERF_DIR:?}"/*
-
 #trap EXIT signal only
 trap "exit_work" EXIT
 
