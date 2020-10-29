@@ -1,0 +1,93 @@
+#!/bin/bash
+#
+# This script is based on the useful script getnetinfo.sh from Niv.
+#
+# Author: Nivedita Singhvi <nivedita.singhvi@canonical.com>
+
+EASY_FLAMEGRAPH_DEFAULT="/etc/default/easy-flamegraph.conf"
+bonddir=/proc/net/bonding/
+
+collect_info() {
+	output_dir="$EASY_FLAME_SYSINFO_LOG_DIR"/net-stat
+	mkdir -p "$output_dir"
+
+	date_sys=$(date '+%Y.%m.%d-%H.%M.%S')
+
+	{
+		echo "---------------------------------------------"
+		echo "$date_sys"
+		for nic in $(ls /sys/class/net); do
+			echo "ethtool-nature-$nic-$date_sys"
+			ethtool $nic 2>/dev/null
+			echo "ethtool-i-$nic-$date_sys"
+			ethtool -i $nic 2>/dev/null
+			echo "ethtool-c-$nic-$date_sys"
+			ethtool -c $nic 2>/dev/null
+			echo "ethtool-k-$nic-$date_sys"
+			ethtool -k $nic 2>/dev/null
+			echo "ethtool-g-$nic-$date_sys"
+			ethtool -g  $nic 2>/dev/null
+			echo "ethtool-S-$nic-$date_sys"
+			ethtool -S $nic 2>/dev/null
+		done
+	}>>"$output_dir"/ethtool.log
+
+	{
+		echo "---------------------------------------------"
+		echo "ip-s-s-d-link-show-$date_sys"
+		ip -s -s -d link show
+		echo "ip-o-addr-$date_sys"
+		ip -o addr
+	}>>"$output_dir"/ip.log
+
+	{
+		echo "---------------------------------------------"
+		echo "$date_sys"
+		if [ -d $bonddir ]
+		then
+			for bond in $(ls $bonddir); do
+				echo "bond:$bond"
+				cat $bonddir/$bond 2>/dev/null
+			done
+		fi
+	}>>"$output_dir"/bonding.log
+
+	# Save important /proc/net file
+	for o in /proc/net/{snmp,netstat,softnet_stat,sockstat}; do
+		if [ -f $o ]; then
+			{
+				echo "---------------------------------------------"
+				echo "$date_sys"
+				cat $o
+			}>>"$output_dir"/$(basename $o).log
+		fi
+	done
+}
+
+# Config file
+if [ -n "$1" ] && [ -r "$1" ]; then
+	EASY_FLAMEGRAPH_DEFAULT="$1"
+	echo "The assigned config file is used: $EASY_FLAMEGRAPH_DEFAULT"
+else
+	echo "There is no \$1 parameter assigned. Use the default config: $EASY_FLAMEGRAPH_DEFAULT"
+fi
+
+[ -r "$EASY_FLAMEGRAPH_DEFAULT" ] && . "$EASY_FLAMEGRAPH_DEFAULT"
+
+if ! $USE_EASY_FLAMEGRAPH; then
+	echo "Weird!! The config file is null"
+	exit 0
+fi
+
+# source lib
+[ -r "$EASY_FLAME_LIB_DIR"/lib ] && . "$EASY_FLAME_LIB_DIR"/lib
+
+if ! "$USE_NET_STAT"; then
+	debug_log "USE_NET_STAT: disabled"
+	exit 0
+fi
+
+debug_log "USE_NET_STAT: enabled"
+
+# for collecting info, we can run it in background
+collect_info
