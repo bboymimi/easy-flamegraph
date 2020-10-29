@@ -62,6 +62,14 @@ collect_info() {
 			}>>"$output_dir"/$(basename $o).log
 		fi
 	done
+
+	{
+		echo "---------------------------------------------"
+		echo "$date_sys"
+		for i in $(ls /sys/class/net/*/queues/*/{rps,xps}_cpus); do
+			echo $i $(cat $i) 2>/dev/null
+		done
+	}>>"$output_dir"/rps-xps.log
 }
 
 # Config file
