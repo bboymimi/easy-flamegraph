@@ -110,7 +110,7 @@ perf_collect() {
 	DATE=$(date +%Y-%m-%d_%H%M%S)
 
 	# perf.data location
-	PERF_DATA_FINAL="$EASY_FLAME_PERF_DIR/$DATE.$cond_type.$ext"
+	PERF_DATA_FINAL="${output_dir}/$DATE.$cond_type.$ext"
 
 	# press ctrl+c when you want to stop the profiling
 	PERF_CMD="$PERF_TMP_CMD -o $PERF_DATA_FINAL sleep $G_PERF_PERIOD"
