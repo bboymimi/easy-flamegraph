@@ -49,128 +49,18 @@ __generate_flamegraph() {
 
 }
 
-generate_per_cpu_flamegraph() {
-
-	local CURRENT_LINE_NR=1
-	local PREV_LINE_NR=1
-	local CURRENT_CPU_NR=0
-	local PREV_CPU_NR=0
-	local FILE="$1"
-	local PCPUSCRIPT
-	local PCPUFOLDED
-	local PCPUSVG
-	# Associative array is local when it's declared inside the function
-	declare -A cpu_array
-
-	# $ grep -Pn '.+\s+\d+\s+\[\d+\] \d+\.\d+:\s+\d+\scycles:\s+' /var/log/easy-flamegraph/cpu/2020-02-11_220302.perf.cpu.t0.u12.1.script
-	# 1:swapper     0 [000] 375287.542317:          1 cycles:
-	# 26:swapper     0 [000] 375287.542324:          1 cycles:
-	# 51:swapper     0 [000] 375287.542327:        178 cycles:
-
-	while read -r i; do
-
-		# Parse the current line number
-		CURRENT_LINE_NR=$(echo "$i" |grep -Po '^\d+')
-
-		if [ "$CURRENT_LINE_NR" = "" ]; then
-			continue
-		fi
-
-		# echo LINE:$CURRENT_LINE_NR
-
-		if [ "$CURRENT_LINE_NR" -ne "$PREV_LINE_NR" ]; then
-			((CURRENT_LINE_NR = CURRENT_LINE_NR - 1))
-			PCPUSCRIPT="${FPERF}$(basename "$PERF_REPORT").cpu${PREV_CPU_NR}.script"
-
-			# Remove the previous script to avoid reuse the previous data
-			if [ "${cpu_array[$PREV_CPU_NR]}"x == ""x ]; then
-				# echo PREV_CPU_NR:$PREV_CPU_NR in if
-				# echo cpu_array[PREV_CPU_NR]:${cpu_array[PREV_CPU_NR]} in if
-				[ -e "$PCPUSCRIPT" ] && rm "$PCPUSCRIPT" && echo remove the existing "$PCPUSCRIPT"!
-			fi
-
-			#echo PREV_CPU_NR:$PREV_CPU_NR in else
-			#echo cpu_array[PREV_CPU_NR]:$PREV_CPU_NR in else
-			cpu_array[$PREV_CPU_NR]=$((${cpu_array[$PREV_CPU_NR]}+1))
-
-			sed -n "$PREV_LINE_NR,${CURRENT_LINE_NR}p" "$FILE" >> "$PCPUSCRIPT"
-			# echo "$PREV_LINE_NR,${CURRENT_LINE_NR}p $FILE >> ${PCPUSCRIPT}"
-		fi
-
-		PREV_LINE_NR=$CURRENT_LINE_NR
-
-		# Parse the CPU number of the callstack
-		PREV_CPU_NR=$(echo "$i" | perl -n -e '/\[(\d+)\]/; print $1')
-		# echo CPU_NR:$PREV_CPU_NR
-
-		if [ "$PREV_CPU_NR" -ge "$MAXCPUNR" ]; then
-			MAXCPUNR="$PREV_CPU_NR"
-		fi
-
-	done <<< "$(grep -Pn '.+\s+\d+\s+\[\d+\] ' "$FILE")"
-
-	# This is the case to handle the last callstack and try to get the last line
-	CURRENT_LINE_NR=$(wc -l < "$FILE")
-
-	# echo $CURRENT_LINE_NR
-	# Check the empty file condition that the while loop is skipped
-	if [ "$PREV_LINE_NR" -lt "$CURRENT_LINE_NR" ] ; then
-		PCPUSCRIPT="${FPERF}$(basename "$PERF_REPORT").cpu${PREV_CPU_NR}.script"
-
-			# Remove the previous script to avoid reuse the previous data
-			if [ "${cpu_array[$PREV_CPU_NR]}"x == ""x ]; then
-				[ -e "$PCPUSCRIPT" ] && rm "$PCPUSCRIPT" && echo remove the existing "$PCPUSCRIPT"!
-			fi
-
-			cpu_array[$PREV_CPU_NR]=$((${cpu_array[$PREV_CPU_NR]}+1))
-
-			sed -n "$PREV_LINE_NR,${CURRENT_LINE_NR}p" "$FILE" >> "$PCPUSCRIPT"
-			# echo "$PREV_LINE_NR,${CURRENT_LINE_NR}p $FILE >> ${1}.cpu${PREV_CPU_NR}"
-	fi
-
-	# Remove leading 0
-	MAXCPUNR=${MAXCPUNR#0}
-
-	# Finally, generate the flamegraph
-	for ((i = 0; i <= MAXCPUNR; i++)); do
-		PCPUSCRIPT="${FPERF}$(basename "$PERF_REPORT")$(printf .cpu%03d "$i").script"
-		PCPUFOLDED="${FPERF}$(basename "$PERF_REPORT")$(printf .cpu%03d "$i").folded"
-		PCPUSVG="${FPERF}$(basename "$PERF_REPORT")$(printf .cpu%03d "$i").svg"
-
-		__generate_flamegraph "$PCPUSCRIPT" "${TITLE}" "${SUBTITLE} - cpu $i" "${PCPUSVG}" "${PCPUFOLDED}"
-	done
-
-	# Use the following instructions to verify the correctness
-	# $ grep -Pn '.+\s+\d+\s+\[\d+\] \d+\.\d+:\s+\d+\scycles:\s+' perf-output/perf.datacpu00*script | wc -l
-	# 3968
-	# $ grep -Pn '.+\s+\d+\s+\[\d+\] \d+\.\d+:\s+\d+\scycles:\s+' perf-output/perf.data.script | wc -l
-	# 3968
-
-}
-
-generate_flamegraph() {
-
-	if $PER_CPU_FLAMEGRAPH; then
-		generate_per_cpu_flamegraph "${PSCRIPT}"
-	fi
-
-	# Always generate the *WHOLE* system flamegraph
-	__generate_flamegraph "${PSCRIPT}" "${TITLE}" "${SUBTITLE}" "${PSVG}" "${PFOLDED}"
-
-}
-
 usage_function() {
             echo "usage: $0 -g <grep string to make specific flamegraph> -i <perf file> -k <kernel version #>"
-            echo "	d - drop the perf related data(include perf.data!!) and keep the .svg flamegraph file to save space"
-            echo "	g - grep strings - to grep specific strings e.g., kworker, to make flamegraph"
-            echo "	i - perf report file"
-            echo "	k - kernel version - specific kernel version number"
-	    echo "	o - output directory - the output directory to save the .svg/script file"
-            echo "	s - symfs - to assign the directory to search for the debug symbol of kernel modules"
-            echo "	t - tar the $FPERF"
-	    echo "	p - generate the flamegraph for each CPU"
-	    echo "	subtitle - the subtitle of the framegraph"
-	    echo "	title - the title of the framegraph"
+            echo "	-d - drop the perf related data(include perf.data!!) and keep the .svg flamegraph file to save space"
+            echo "	-g - grep strings - to grep specific strings e.g., kworker, to make flamegraph"
+            echo "	-i - perf report file"
+            echo "	-k - kernel version - specific kernel version number"
+	    echo "	-o - output directory - the output directory to save the .svg/script file"
+            echo "	-s - symfs - to assign the directory to search for the debug symbol of kernel modules"
+            echo "	-t - tar the $FPERF"
+	    echo "	-p [true|false] -  generate the flamegraph for each CPU"
+	    echo "	--subtitle - the subtitle of the framegraph"
+	    echo "	--title - the title of the framegraph"
 }
 
 clean_exit() {
@@ -297,12 +187,36 @@ fi
 #trap EXIT signal only
 trap "clean_exit" EXIT
 
+# To get the number of the cpu, we cannot use $(getconf _NPROCESSORS_ONLN), as
+# the perf.data report will be generated remotely.
+
+NRPROCESSORS=$(sudo perf report --header | grep nrcpus | perl -n -e '/nrcpus\s+avail\s+\:\s+(\d+)/; print $1')
+MAXCPUNR=$((NRPROCESSORS-1))
+
+if $PER_CPU_FLAMEGRAPH; then
+	echo -n "Generating per-cpu flamegraph"
+	for i in $(seq 0 $((MAXCPUNR))); do
+		# generating flamegraph for each cpu will generate a dot to show the status.
+		echo -n "."
+		# The ${PERF_SCRIPT_CMD} cannot be double quoted as it's executing command
+		${PERF_SCRIPT_CMD} -C "$i" > "${FPERF}""$(basename "$PERF_REPORT")$(printf .cpu%03d "$i")".script
+		PCPUSCRIPT="${FPERF}$(basename "$PERF_REPORT")$(printf .cpu%03d "$i").script"
+		PCPUFOLDED="${FPERF}$(basename "$PERF_REPORT")$(printf .cpu%03d "$i").folded"
+		PCPUSVG="${FPERF}$(basename "$PERF_REPORT")$(printf .cpu%03d "$i").svg"
+
+		__generate_flamegraph "$PCPUSCRIPT" "${TITLE}" "${SUBTITLE} - cpu $i" "${PCPUSVG}" "${PCPUFOLDED}"
+	done
+	# new line
+	echo
+fi
+
 # generate the perf script file for the stackcollapse to extract the call stack
 ${PERF_SCRIPT_CMD} > "$PSCRIPT"
 
 [ ! -s "$PSCRIPT" ] && echo "No perf data captured!"  && exit
 
-generate_flamegraph
+# Always generate the *WHOLE* system flamegraph
+__generate_flamegraph "${PSCRIPT}" "${TITLE}" "${SUBTITLE}" "${PSVG}" "${PFOLDED}"
 
 echo "###########"
 if ! $TAR; then
