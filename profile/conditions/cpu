@@ -7,19 +7,23 @@ condition_check() {
 	local title="CPU Utilization Flamegraph"
 	local uname=""
 
-	uname="$(uname -r)"
+	# FIXIT: Perf would capture the uname also and save it in the header,
+	# we don't need to do it here if the backend is Perf. However, in the
+	# future, if the backend changes to other tool, e.g. bcc/ebpf/ftrace.
+	# We may need to capture it here.
+	# uname="$(uname -r)"
 	idle_rate=$(mpstat -P ALL 1 1| grep -P 'Average:\s+all'| perl -n -e '/Average:\s+all.+\s(\d+)\.(\d+)$/; print $1;')
 	debug_log "Idle rate: $idle_rate"
 	cpu_rate=$((100-idle_rate))
-	subtitle="$uname CPU threshold: $CPU_THRESHOLD, utilization: $cpu_rate"
+	subtitle="CPU thr: $CPU_THRESHOLD, util: $cpu_rate"
 	debug_log "$subtitle"
 
 	# start perf if cpu rate is over threshold
 	if ((cpu_rate >= CPU_THRESHOLD)); then
 		ext="${ext}t${CPU_THRESHOLD}.u${cpu_rate}"
 		debug_log "Conditions matched, start perf record"
-		date="$(date +%Y-%m-%d_%H%M%S%z)"
-		subtitle="$date $subtitle"
+		#date="$(date +%Y-%m-%d_%H%M%S%z)"
+		#subtitle="$date $subtitle"
 		perf_collect "cpu" "$ext" "$title" "$subtitle" "$USE_CPU_EVENT"
 	fi
 }
