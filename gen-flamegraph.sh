@@ -51,7 +51,7 @@ __generate_flamegraph() {
 
 usage_function() {
             echo "usage: $0 -g <grep string to make specific flamegraph> -i <perf file> -k <kernel version #>"
-            echo "	-d - drop the perf related data(include perf.data!!) and keep the .svg flamegraph file to save space"
+            echo "	-d - drop the intermediate perf related data(include script/folded!!) and keep the .svg flamegraph file to save space"
             echo "	-g - grep strings - to grep specific strings e.g., kworker, to make flamegraph"
             echo "	-i - perf report file"
             echo "	-k - kernel version - specific kernel version number"
@@ -59,7 +59,7 @@ usage_function() {
             echo "	-s - symfs - to assign the directory to search for the debug symbol of kernel modules"
             echo "	-t - tar the $FPERF"
 	    echo "	-p [true|false] -  generate the flamegraph for each CPU"
-	    echo "	--subtitle - the subtitle of the framegraph"
+	    echo "	--subtitle - the subtitle of the flamegraph"
 	    echo "	--title - the title of the framegraph"
 }
 
