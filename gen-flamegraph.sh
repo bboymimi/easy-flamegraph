@@ -103,9 +103,14 @@ do
 			usage_function
 			exit 0
 			;;
-		-p)
-			PER_CPU_FLAMEGRAPH=$2
-			shift 2
+		-p|--per-cpu)
+			if [[ $2 == "true" || $2 == "false" ]]; then
+				PER_CPU_FLAMEGRAPH=$2
+				shift 2
+			else
+				PER_CPU_FLAMEGRAPH=true
+				shift 1
+			fi
 			;;
 		--subtitle)
 			SUBTITLE=$2
