@@ -6,6 +6,7 @@ FPERF="$(pwd)/perf-output/"
 PERF_SCRIPT_CMD="perf script"
 PERF_REPORT=""
 GREP_STRINGS=""
+PCRE_STRING=""
 KERNEL_VERSION=""
 MAXCPUNR=0
 PER_CPU_FLAMEGRAPH=false
@@ -17,16 +18,25 @@ TITLE=""
 # $1:$PSCRIPT $2:$TITLE $3:$SUBTITLE $4:$PSVG $5:$PFOLDED
 __generate_flamegraph() {
 
+	local SVG
+	local SUBTITLE
+
 	# extract the call stack for the flamegraph.pl to generate the svg interactive graph
 	"${FPATH}"stackcollapse-perf.pl --all "$1" > "$5"
 
-	if [[ $GREP_STRINGS == "" ]]; then
+	if [[ "$GREP_STRINGS" == "" && "$PCRE_STRING" == "" ]]; then
 	    #cat ${PFOLDED} | ${FPATH}flamegraph.pl > ${PSVG}
 	    grep -Pv 'addr2line|stackcollapse' "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$3" > "$4"
+	elif [[ "$PCRE_STRING" != "" ]]; then
+	    # add the string name to the SVG name to identify the file easily
+	    SVG="${5%.folded}.pcre.svg"
+	    SUBTITLE="$3 pcre:\"$PCRE_STRING\""
+	    grep -P "$PCRE_STRING" "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" > "$SVG"
 	else
 	    # add the string name to the SVG name to identify the file easily
-	    PSVG="$5S$GREP_STRINGS.svg"
-	    grep -E "$GREP_STRINGS" "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$3" > "$4"
+	    SVG="${5%.folded}.S$GREP_STRINGS.svg"
+	    SUBTITLE="$3 grep:\"$GREP_STRINGS\""
+	    grep -E "$GREP_STRINGS" "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" > "$SVG"
 	fi
 
 	if $DROP_PERF_DATA; then
@@ -59,6 +69,7 @@ usage_function() {
             echo "	-s - symfs - to assign the directory to search for the debug symbol of kernel modules"
             echo "	-t - tar the $FPERF"
 	    echo "	-p [true|false] -  generate the flamegraph for each CPU"
+	    echo "	--pcre - use the Perl Compatible Regular Expression"
 	    echo "	--subtitle - the subtitle of the flamegraph"
 	    echo "	--title - the title of the framegraph"
 }
@@ -102,6 +113,10 @@ do
 		-h|--help)
 			usage_function
 			exit 0
+			;;
+		--pcre)
+			PCRE_STRING="$2"
+			shift 2
 			;;
 		-p|--per-cpu)
 			if [[ $2 == "true" || $2 == "false" ]]; then
