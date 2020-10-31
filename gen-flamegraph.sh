@@ -24,21 +24,23 @@ __generate_flamegraph() {
 	# extract the call stack for the flamegraph.pl to generate the svg interactive graph
 	"${FPATH}"stackcollapse-perf.pl --all "$1" > "$5"
 
+	# grep the required string
 	if [[ "$GREP_STRINGS" == "" && "$PCRE_STRING" == "" ]]; then
-	    #cat ${PFOLDED} | ${FPATH}flamegraph.pl > ${PSVG}
-	    grep -Pv 'addr2line|stackcollapse' "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$3" > "$4"
+		#cat ${PFOLDED} | ${FPATH}flamegraph.pl > ${PSVG}
+		grep -Pv 'addr2line|stackcollapse' "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$3" > "$4"
 	elif [[ "$PCRE_STRING" != "" ]]; then
-	    # add the string name to the SVG name to identify the file easily
-	    SVG="${5%.folded}.pcre.svg"
-	    SUBTITLE="$3 pcre:\"$PCRE_STRING\""
-	    grep -P "$PCRE_STRING" "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" > "$SVG"
+		# add the string name to the SVG name to identify the file easily
+		SVG="${5%.folded}.pcre.svg"
+		SUBTITLE="$3 pcre:\"$PCRE_STRING\""
+		grep -P "$PCRE_STRING" "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" > "$SVG"
 	else
-	    # add the string name to the SVG name to identify the file easily
-	    SVG="${5%.folded}.S$GREP_STRINGS.svg"
-	    SUBTITLE="$3 grep:\"$GREP_STRINGS\""
-	    grep -E "$GREP_STRINGS" "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" > "$SVG"
+		# add the string name to the SVG name to identify the file easily
+		SVG="${5%.folded}.S$GREP_STRINGS.svg"
+		SUBTITLE="$3 grep:\"$GREP_STRINGS\""
+		grep -E "$GREP_STRINGS" "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" > "$SVG"
 	fi
 
+	# drop the intermediate data
 	if $DROP_PERF_DATA; then
 		[ -e "$5" ] && rm "$5" # remove the $PFOLDED
 		[ -e "$1" ] && rm "$1" # remove the $PSCRIPT
