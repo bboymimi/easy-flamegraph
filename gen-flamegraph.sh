@@ -6,6 +6,7 @@ FPERF="$(pwd)/perf-output/"
 PERF_SCRIPT_CMD="perf script"
 PERF_REPORT=""
 GREP_STRINGS=""
+HEADER_INFO=true
 PCRE_STRING=""
 KERNEL_VERSION=""
 MAXCPUNR=0
@@ -20,23 +21,29 @@ __generate_flamegraph() {
 
 	local SVG
 	local SUBTITLE
+	local HEADER
 
 	# extract the call stack for the flamegraph.pl to generate the svg interactive graph
 	"${FPATH}"stackcollapse-perf.pl --all "$1" > "$5"
 
+	# grep the useful header info and add to subtitle
+	# HEADER=$(perf report --header -I -i $PERF_REPORT| grep -P "nrcpus|captured|os release|hostname|total memory|cmdline|node\d+")
+	HEADER=$(perf report --header -I -i $PERF_REPORT| grep -P "captured|os release|hostname|node\d+")
+	SUBTITLE=${3}${HEADER}
+
 	# grep the required string
 	if [[ "$GREP_STRINGS" == "" && "$PCRE_STRING" == "" ]]; then
 		#cat ${PFOLDED} | ${FPATH}flamegraph.pl > ${PSVG}
-		grep -Pv 'addr2line|stackcollapse' "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$3" > "$4"
+		grep -Pv 'addr2line|stackcollapse' "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" > "$4"
 	elif [[ "$PCRE_STRING" != "" ]]; then
 		# add the string name to the SVG name to identify the file easily
 		SVG="${5%.folded}.pcre.svg"
-		SUBTITLE="$3 pcre:\"$PCRE_STRING\""
+		SUBTITLE="$SUBTITLE pcre:\"$PCRE_STRING\""
 		grep -P "$PCRE_STRING" "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" > "$SVG"
 	else
 		# add the string name to the SVG name to identify the file easily
 		SVG="${5%.folded}.S$GREP_STRINGS.svg"
-		SUBTITLE="$3 grep:\"$GREP_STRINGS\""
+		SUBTITLE="$SUBTITLE grep:\"$GREP_STRINGS\""
 		grep -E "$GREP_STRINGS" "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" > "$SVG"
 	fi
 
@@ -71,6 +78,7 @@ usage_function() {
             echo "	-s - symfs - to assign the directory to search for the debug symbol of kernel modules"
             echo "	-t - tar the $FPERF"
 	    echo "	-p [true|false] -  generate the flamegraph for each CPU"
+	    echo "	-I [true|false] - default:[false], the flag will disable printing the info from perf header"
 	    echo "	--pcre - use the Perl Compatible Regular Expression"
 	    echo "	--subtitle - the subtitle of the flamegraph"
 	    echo "	--title - the title of the framegraph"
@@ -126,6 +134,16 @@ do
 				shift 2
 			else
 				PER_CPU_FLAMEGRAPH=true
+				shift 1
+			fi
+			;;
+		-I)
+			if [[ $2 == "true" || $2 == "false" ]]; then
+				HEADER_INFO=$2
+				shift 2
+			else
+				# By default, the header is enabled. So, let the default option to disable the header info.
+				HEADER_INFO=false
 				shift 1
 			fi
 			;;
@@ -212,7 +230,7 @@ trap "clean_exit" EXIT
 # To get the number of the cpu, we cannot use $(getconf _NPROCESSORS_ONLN), as
 # the perf.data report will be generated remotely.
 
-NRPROCESSORS=$(sudo perf report --header | grep nrcpus | perl -n -e '/nrcpus\s+avail\s+\:\s+(\d+)/; print $1')
+NRPROCESSORS=$(sudo perf report --header -i $PERF_REPORT | grep nrcpus | perl -n -e '/nrcpus\s+avail\s+\:\s+(\d+)/; print $1')
 MAXCPUNR=$((NRPROCESSORS-1))
 
 if $PER_CPU_FLAMEGRAPH; then
