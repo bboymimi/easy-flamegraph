@@ -138,6 +138,10 @@ perf_collect() {
 	#SUBTITLE="${DATE} CPU Threshold:${CPU_THRESHOLD}% CPU Utilization:${CPU_UTILIZATION}%"
 	#(
 		# Generate the flamegraph
+		debug_log "CMD: "$EASY_FLAME_LIB_DIR"/gen-flamegraph.sh -i "$PERF_DATA_FINAL" "$KEEP_SVG_OPTION""
+		debug_log "-o "$output_dir" --title $title --subtitle $subtitle "
+		debug_log "-p "$G_PER_CPU_FLAMEGRAPH" '>>' "$EASY_FLAME_LOG""
+
 		"$EASY_FLAME_LIB_DIR"/gen-flamegraph.sh -i "$PERF_DATA_FINAL" "$KEEP_SVG_OPTION" \
 			-o "$output_dir" --title "$title" --subtitle "$subtitle" \
 			-p "$G_PER_CPU_FLAMEGRAPH" >> "$EASY_FLAME_LOG" 2>&1
