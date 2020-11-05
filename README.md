@@ -17,9 +17,21 @@ This is a light-weight utility used for performance profiling and data analysis.
 
 The performance data capturing is currently based on Perf. By default, it will profile per-minute for one second period to capture the CPU/Memory/IO realated perf event data. Then, the log data will be translated to the files with specific formats(csv,tsv...) for further analysis(ScatterPlot/Flamegraph/LineChart...etc.).
 
-After git clone the repo, the tool can be installed to the system by:
+```
+$ git clone https://github.com/bboymimi/easy-flamegraph.git
+```
+
+After git clone the repo, there are some dependent packages which need to be installed:
 
 ```
+sudo apt update
+sudo apt install -y binutils linux-tools-common linux-tools-$(uname -r) sysstat make zip
+```
+
+Then, the easy-flamegraph can be installed to the system by:
+
+```
+$ cd easy-flamegraph
 $ sudo make install
 ```
 
@@ -60,6 +72,7 @@ G_PERF_PERIOD=1
 ## Flamegraph generation
 The flamegraph will be generated automatically into the specific subsystem folders: /var/log/easy-flamegraph{cpu,mem,io}. However, the specific flamegraph generation needs to be enabled in the etc/default/easy-flamegraph.conf.
 
+The easy-flamegraph info log can be found in /var/log/easy-flamegraph/log if it cannot work.
 
 ### CPU
 USE_CPU=true
