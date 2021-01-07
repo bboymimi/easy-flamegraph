@@ -34,8 +34,22 @@ condition_check() {
 
 	# if both read and write are over threshold, return true to start recording
 	if "$read_b" && "$write_b"; then
-		debug_log "Conditions matched, start perf record"
-		perf_collect "io" "$ext" "IO" "IO perf" "$USE_IO_EVENT"
+		debug_log "Conditions matched, start to profile the system."
+		case "$USE_IO_BACKEND" in
+			ftrace)
+				bash "${EASY_FLAME_COND_DIR}/io/io_ftrace" "$EASY_FLAMEGRAPH_DEFAULT"
+				;;
+			perf)
+				perf_collect "io" "$ext" "IO" "IO perf" "$USE_IO_EVENT"
+				;;
+			bcc)
+				debug_log "Error!! bcc backend has not been implemented!!"
+				;;
+			*)
+				debug_log "Error!! Invalid backend: ${USE_IO_BACKEND}"
+				exit 1
+				;;
+		esac
 	fi
 }
 

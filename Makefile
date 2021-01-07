@@ -2,6 +2,7 @@
 CP = /bin/cp
 EZ_LIB_DIR = /usr/lib/easy-flamegraph
 EZ_COND_DIR = /usr/lib/easy-flamegraph/conditions
+EZ_COND_DIR_IO = /usr/lib/easy-flamegraph/conditions/io
 EZ_SYSINFO_DIR = /usr/lib/easy-flamegraph/sysinfo
 EZ_LOG_DIR = /var/log/easy-flamegraph
 EZ_DEFAULT_DIR = /etc/default/
@@ -13,6 +14,7 @@ INSTALL_BIN = ${INSTALL} -m 755
 install:
 	mkdir -p $(DESTDIR)$(EZ_LIB_DIR)
 	mkdir -p $(DESTDIR)$(EZ_COND_DIR)
+	mkdir -p $(DESTDIR)$(EZ_COND_DIR_IO)
 	mkdir -p $(DESTDIR)$(EZ_SYSINFO_DIR)
 	mkdir -p $(DESTDIR)$(EZ_LOG_DIR)
 	mkdir -p $(DESTDIR)$(EZ_CRON_DIR)
@@ -24,7 +26,8 @@ install:
 	$(INSTALL_BIN) profile/ezcli $(EZ_LIB_DIR)
 	$(INSTALL_BIN) profile/conditions/cpu $(EZ_COND_DIR)
 	$(INSTALL_BIN) profile/conditions/mem $(EZ_COND_DIR)
-	$(INSTALL_BIN) profile/conditions/io $(EZ_COND_DIR)
+	$(INSTALL_BIN) profile/conditions/io/io $(EZ_COND_DIR_IO)
+	$(INSTALL_BIN) profile/conditions/io/io_ftrace $(EZ_COND_DIR_IO)
 	$(INSTALL_BIN) profile/sysinfo/bcache $(EZ_SYSINFO_DIR)
 	$(INSTALL_BIN) profile/sysinfo/irq-stat $(EZ_SYSINFO_DIR)
 	$(INSTALL_BIN) profile/sysinfo/mem-stat $(EZ_SYSINFO_DIR)
