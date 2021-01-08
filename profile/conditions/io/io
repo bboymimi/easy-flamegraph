@@ -40,6 +40,8 @@ condition_check() {
 				bash "${EASY_FLAME_COND_DIR}/io/io_ftrace" "$EASY_FLAMEGRAPH_DEFAULT"
 				;;
 			perf)
+				# clean the probe point before adding the new probe point
+				clean_probe_points
 				perf_collect "io" "$ext" "IO" "IO perf" "$USE_IO_EVENT"
 				;;
 			bcc)
@@ -84,9 +86,6 @@ debug_log "USE_IO: enabled"
 
 #trap EXIT signal only
 trap "exit_work" EXIT
-
-# clean the probe point before adding the new probe point
-clean_probe_points
 
 # start checking if conditions are matched
 debug_log "Checking conditions"
