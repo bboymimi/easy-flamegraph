@@ -40,8 +40,12 @@ condition_check() {
 				bash "${EASY_FLAME_COND_DIR}/io/io_ftrace" "$EASY_FLAMEGRAPH_DEFAULT"
 				;;
 			perf)
+				# append the string of the profiled process name to differentiate the perf.data
+				[[ "$APPEND_STRINGS" != "" ]] && PERF_DATA=$PERF_DATA.$APPEND_STRINGS$PID
+
 				# clean the probe point before adding the new probe point
 				clean_probe_points
+
 				perf_collect "io" "$ext" "IO" "IO perf" "$USE_IO_EVENT"
 				;;
 			bcc)
@@ -80,9 +84,6 @@ if ! "$USE_IO"; then
 fi
 
 debug_log "USE_IO: enabled"
-
-# append the string of the profiled process name to differentiate the perf.data
-[[ "$APPEND_STRINGS" != "" ]] && PERF_DATA=$PERF_DATA.$APPEND_STRINGS$PID
 
 #trap EXIT signal only
 trap "exit_work" EXIT
