@@ -60,7 +60,7 @@ if "$USE_SYSINFO_PERIODICALLY"; then
 fi
 
 debug_log "Run scripts in $EASY_FLAME_COND_DIR"
-for cond_script in $(ls "$EASY_FLAME_COND_DIR"/* "$EASY_FLAME_COND_DIR"/io/io); do
+for cond_script in $(ls "$EASY_FLAME_COND_DIR"/* "$EASY_FLAME_COND_DIR"/io/io "$EASY_FLAME_COND_DIR"/mem/mem); do
 	if [ -f "$cond_script" ] && [ -x "$cond_script" ]; then
 		debug_log "Script: $(basename "$cond_script")"
 		bash "$cond_script" "$EASY_FLAMEGRAPH_DEFAULT"

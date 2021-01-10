@@ -1,0 +1,63 @@
+#!/bin/bash
+
+condition_check() {
+	# TODO: threshold size checking
+	if true; then
+		debug_log "Mem threshold size matched, start to profile the system."
+		case "$USE_MEM_BACKEND" in
+			ftrace)
+				bash "${EASY_FLAME_COND_DIR}/mem/mem_ftrace" "$EASY_FLAMEGRAPH_DEFAULT"
+				;;
+			perf)
+				debug_log "Error!! perf backend has not been implemented!!"
+				# Perf part needs to rethink if it's still worth
+				# to implement.
+				# append the string of the profiled process name to differentiate the perf.data
+				# [[ "$APPEND_STRINGS" != "" ]] && PERF_DATA=$PERF_DATA.$APPEND_STRINGS$PID
+				# clean the probe point before adding the new probe point
+				# clean_probe_points
+				# perf_collect "io" "$ext" "IO" "IO perf" "$USE_IO_EVENT"
+				;;
+			bcc)
+				debug_log "Error!! bcc backend has not been implemented!!"
+				;;
+			*)
+				debug_log "Error!! Invalid backend: ${USE_IO_BACKEND}"
+				exit 1
+				;;
+		esac
+	fi
+}
+
+PERF_DATA="perf.mem"
+
+# Config file
+if [ -n "$1" ] && [ -r "$1" ]; then
+	EASY_FLAMEGRAPH_DEFAULT="$1"
+else
+	echo "Unable to read config file $1"
+	exit 1
+fi
+
+[ -r "$EASY_FLAMEGRAPH_DEFAULT" ] && . "$EASY_FLAMEGRAPH_DEFAULT"
+
+if ! $USE_EASY_FLAMEGRAPH; then
+	exit 0
+fi
+
+# source lib
+[ -r "$EASY_FLAME_LIB_DIR"/lib ] && . "$EASY_FLAME_LIB_DIR"/lib
+
+if ! "$USE_MEM"; then
+	debug_log "USE_MEM: disabled"
+	exit 0
+fi
+
+debug_log "USE_MEM: enabled"
+
+#trap EXIT signal only
+trap "exit_work" EXIT
+
+# start checking if conditions are matched
+debug_log "Checking mem conditions"
+condition_check

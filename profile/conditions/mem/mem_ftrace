@@ -1,0 +1,113 @@
+#!/bin/bash
+
+# Config file
+if [ -n "$1" ] && [ -r "$1" ]; then
+	EASY_FLAMEGRAPH_DEFAULT="$1"
+else
+	echo "Unable to read config file $1"
+	exit 1
+fi
+
+[ -r "$EASY_FLAMEGRAPH_DEFAULT" ] && . "$EASY_FLAMEGRAPH_DEFAULT"
+
+# source lib
+[ -r "$EASY_FLAME_LIB_DIR"/lib ] && . "$EASY_FLAME_LIB_DIR"/lib
+
+restore_sym_addr=false
+restore_sym_offset=false
+
+# create output directory for different type
+output_dir="$EASY_FLAME_OUTPUT"/mem
+mkdir -p "$output_dir"
+DATE=$(date +%Y-%m-%d_%H%M%S)
+ext="memtrace"
+
+# data location
+data_path="${output_dir}/${DATE}.mem.${ext}"
+
+debug_log "USE_MEM_FTRACE: enabled"
+
+debug_log "set nop as the default tracer"
+echo function_graph > /sys/kernel/debug/tracing/current_tracer
+# echo function_graph > /sys/kernel/debug/tracing/current_tracer
+
+debug_log "Clear the filter!"
+echo > /sys/kernel/debug/tracing/set_ftrace_filter
+
+debug_log "Clear the set_graph_function"
+#echo __alloc_pages_nodemask > /sys/kernel/debug/tracing/set_graph_function
+echo __alloc_pages_nodemask > /sys/kernel/debug/tracing/set_ftrace_filter
+
+debug_log "Clear the trace buffer!"
+echo > /sys/kernel/debug/tracing/trace
+
+debug_log "Insert kmem__alloc_pages_nodemask trace point!"
+if grep -q kmem__alloc_pages_nodemask /sys/kernel/debug/tracing/kprobe_events; then
+	# debug_log "Remove the the existing blk_mq_start_request trace event!"
+	echo "Remove the the existing kmem__alloc_pages_nodemask trace event!"
+	echo '-:kmem__alloc_pages_nodemask' >> /sys/kernel/debug/tracing/kprobe_events
+fi
+
+debug_log "Insert again kmem__alloc_pages_nodemask trace event!"
+echo 'p:kmem__alloc_pages_nodemask __alloc_pages_nodemask request=%di' >> /sys/kernel/debug/tracing/kprobe_events
+
+debug_log "Insert kmem:mm_page_alloc trace event!"
+echo 'kmem:mm_page_alloc' >> /sys/kernel/debug/tracing/set_event
+
+
+if ! grep -q "sym\-addr" /sys/kernel/debug/tracing/trace_options; then
+	debug_log "set restore_nosym-addr"
+	restore_sym_addr=true
+	echo "sym-addr" > /sys/kernel/debug/tracing/trace_options
+fi
+
+if ! grep -q "sym\-offset" /sys/kernel/debug/tracing/trace_options; then
+	debug_log "set restore_nosym-offset"
+	restore_sym_offset=true
+	echo "sym-offset" > /sys/kernel/debug/tracing/trace_options
+fi
+
+echo stacktrace > /sys/kernel/debug/tracing/events/kmem/mm_page_alloc/trigger
+echo 1 > /sys/kernel/debug/tracing/events/kprobes/kmem__alloc_pages_nodemask/enable
+
+debug_log "start the tracing"
+echo 1 > /sys/kernel/debug/tracing/tracing_on
+
+debug_log "sleep 5 seconds"
+sleep 5
+
+debug_log "stop the tracing"
+echo 0 > /sys/kernel/debug/tracing/tracing_on
+
+echo 0 > /sys/kernel/debug/tracing/events/kprobes/kmem__alloc_pages_nodemask/enable
+
+debug_log "cat the trace result to $data_path"
+cat /sys/kernel/debug/tracing/trace > "$data_path"
+
+# Remember to remove the event after cating the trace log, or the trace log
+# cannot find the event probe points and will output the unknow type:
+#           <...>-2613639 [003] ...2 956467.930520: Unknown type 2286
+#  irq/47-ahci[000-251   [000] ..s2 956467.932550: Unknown type 2287
+#      jbd2/sda1-8-282   [001] ...2 956467.932655: Unknown type 2286
+#  irq/47-ahci[000-251   [000] ..s2 956467.932979: Unknown type 2287
+#            <...>-264029 [001] ...2 956467.933010: Unknown type 2286
+#            <...>-749159 [000] ...2 956467.976818: Unknown type 2286
+#  irq/47-ahci[000-251   [000] ..s2 956467.976939: Unknown type 2287
+#            <...>-749159 [000] ...2 956467.976945: Unknown type 2286
+echo '!kmem:mm_page_alloc' >> /sys/kernel/debug/tracing/set_event
+
+echo '!stacktrace' > /sys/kernel/debug/tracing/events/kmem/mm_page_alloc/trigger
+echo '-:kmem__alloc_pages_nodemask' >> /sys/kernel/debug/tracing/kprobe_events
+
+if $restore_sym_offset; then
+	debug_log "restore nosym-offset"
+	echo nosym-offset > /sys/kernel/debug/tracing/trace_options
+fi
+
+if $restore_sym_addr; then
+	debug_log "restore nosym-addr"
+	echo nosym-addr > /sys/kernel/debug/tracing/trace_options
+fi
+
+debug_log "Clear the trace buffer!"
+echo > /sys/kernel/debug/tracing/trace
