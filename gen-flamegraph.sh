@@ -131,17 +131,11 @@ flamegraph_init() {
 __generate_flamegraph() {
 	local SVG
 	local SUBTITLE="$3"
-	local HEADER
 
 	case "$TRACE_SRC" in
 		perf)
 			# extract the call stack for the flamegraph.pl to generate the svg interactive graph
 			"${FPATH}"stackcollapse-perf.pl --all "$1" > "$5"
-
-			# grep the useful header info and add to subtitle
-			# HEADER=$(perf report --header -I -i $PERF_REPORT| grep -P "nrcpus|captured|os release|hostname|total memory|cmdline|node\d+")
-			HEADER=$(perf report --header -I -i $PERF_REPORT| grep -P "captured|os release|hostname|node\d+")
-			SUBTITLE="${SUBTITLE}${HEADER}"
 			;;
 		ftrace)
 			# extract the call stack for the flamegraph.pl to generate the svg interactive graph
@@ -195,6 +189,8 @@ __generate_flamegraph() {
 }
 
 generate_flamegraph_perf() {
+	local HEADER
+
 	PSCRIPT="${FPERF}$(basename "$PERF_REPORT").script"
 
 	# perf script -i ./perf-110417_201609 -k ~/ddebs/ddebs-4.4.0-53.74/usr/lib/debug/boot/vmlinux-4.4.0-53-generic > perf-110417_201609.perf
@@ -206,6 +202,13 @@ generate_flamegraph_perf() {
 	# the perf.data report will be generated remotely.
 	NRPROCESSORS=$(perf report --header -i $PERF_REPORT | grep nrcpus | perl -n -e '/nrcpus\s+avail\s+\:\s+(\d+)/; print $1')
 	MAXCPUNR=$((NRPROCESSORS-1))
+
+	# grep the useful header info and add to subtitle
+	# HEADER=$(perf report --header -I -i $PERF_REPORT| grep -P "nrcpus|captured|os release|hostname|total memory|cmdline|node\d+")
+	if $HEADER_INFO; then
+		HEADER=$(perf report --header -I -i $PERF_REPORT| grep -P "captured|os release|hostname|node\d+")
+		SUBTITLE="${SUBTITLE}${HEADER}"
+	fi
 
 	if $PER_CPU_FLAMEGRAPH; then
 		echo -n "Generating per-cpu flamegraph"
