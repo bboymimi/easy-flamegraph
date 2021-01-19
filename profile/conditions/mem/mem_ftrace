@@ -13,6 +13,43 @@ fi
 # source lib
 [ -r "$EASY_FLAME_LIB_DIR"/lib ] && . "$EASY_FLAME_LIB_DIR"/lib
 
+prepare_to_gen_flamegraph() {
+	# TODO: need to implement the mem threshold checking
+	local anon=""
+	local file=""
+	# The memory ftrace is captured after 5s with executing date command
+	local subtitle="${DATE}+5s"
+	local title="Mem Allocation Flamegraph"
+	local type="--ftrace"
+	local uname=""
+	local per_cpu_flame="false"
+
+	# TODO: need to implement the per-cpu flamegraph
+	if $G_PER_CPU_FLAMEGRAPH; then
+		debug_log "${FUNCNAME[0]}: The per-cpu flamegraph for ftrace is not implemented!!"
+	fi
+
+	if "$G_KEEP_SVG"; then
+		KEEP_SVG_OPTION="-d"
+	elif "$G_KEEP_TAR"; then
+		KEEP_SVG_OPTION="-t"
+	else
+		KEEP_SVG_OPTION=""
+	fi
+
+	anon=$(awk '/anon/{sum+=$2} END {print "anon:" sum/1048576 "GB"}' /proc/meminfo)
+	file=$(awk '/file/{sum+=$2} END {print "file:" sum/1048576 "GB"}' /proc/meminfo)
+	subtitle="${subtitle} $(grep -Pi '((mem|swap)(free|total)|reclaimable)' /proc/meminfo)"
+	subtitle="${subtitle} ${file} ${anon}"
+	debug_log "CMD: "$EASY_FLAME_LIB_DIR"/gen-flamegraph.sh -i "$data_path" "$KEEP_SVG_OPTION""
+	debug_log "-o "$output_dir" --title $title --subtitle $subtitle "
+	debug_log "-p "$per_cpu_flame" "$type" '>>' "$EASY_FLAME_LOG""
+
+	"$EASY_FLAME_LIB_DIR"/gen-flamegraph.sh -i "$data_path" "$KEEP_SVG_OPTION" \
+		-o "$output_dir" --title "$title" --subtitle "$subtitle" \
+		-p "$per_cpu_flame" "$type" >> "$EASY_FLAME_LOG" 2>&1
+}
+
 restore_sym_addr=false
 restore_sym_offset=false
 
@@ -83,6 +120,8 @@ echo 0 > /sys/kernel/debug/tracing/events/kprobes/kmem__alloc_pages_nodemask/ena
 
 debug_log "cat the trace result to $data_path"
 cat /sys/kernel/debug/tracing/trace > "$data_path"
+
+prepare_to_gen_flamegraph
 
 # Remember to remove the event after cating the trace log, or the trace log
 # cannot find the event probe points and will output the unknow type:

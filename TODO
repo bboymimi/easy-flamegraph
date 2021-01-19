@@ -27,3 +27,14 @@
 - ceph osd perf counter, use avgtime to trigger log level or perf record
 
 - vmtouch, check some directories
+
+- profile
+
+mem_ftrace)
+The next step will need to implement order/migrate-type/size based
+flamegraph to visualize the result easily. Also, other report can be
+generated:
+
+1). The 5s memory-related data comparison(vmstat/meminfo/zoneinfo).
+2). The memory allocation comparison during the 5s with each process
+and what type of memory it allocates.
