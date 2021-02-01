@@ -43,11 +43,11 @@ prepare_to_gen_flamegraph() {
 	subtitle="${subtitle} ${file} ${anon}"
 	debug_log "CMD: "$EASY_FLAME_LIB_DIR"/gen-flamegraph.sh -i "$data_path" "$KEEP_SVG_OPTION""
 	debug_log "-o "$output_dir" --title $title --subtitle $subtitle "
-	debug_log "-p "$per_cpu_flame" "$type" '>>' "$EASY_FLAME_LOG""
+	debug_log "-p "$per_cpu_flame" "$type" --mem-flame '>>' "$EASY_FLAME_LOG""
 
 	"$EASY_FLAME_LIB_DIR"/gen-flamegraph.sh -i "$data_path" "$KEEP_SVG_OPTION" \
 		-o "$output_dir" --title "$title" --subtitle "$subtitle" \
-		-p "$per_cpu_flame" "$type" >> "$EASY_FLAME_LOG" 2>&1
+		-p "$per_cpu_flame" "$type" --mem-flame >> "$EASY_FLAME_LOG" 2>&1
 }
 
 restore_sym_addr=false
