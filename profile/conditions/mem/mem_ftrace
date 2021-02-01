@@ -119,7 +119,16 @@ echo 0 > /sys/kernel/debug/tracing/tracing_on
 echo 0 > /sys/kernel/debug/tracing/events/kprobes/kmem__alloc_pages_nodemask/enable
 
 debug_log "cat the trace result to $data_path"
-cat /sys/kernel/debug/tracing/trace > "$data_path"
+# generate the trace log by cpu order instead of cating the default trace file
+# to avoid the log messing up(i.e. cat /sys/kernel/debug/tracing/trace >
+# "$data_path"). And the messing up would make the stackcollapse script parse
+# wrong.
+for i in $(ls /sys/kernel/debug/tracing/per_cpu/); do
+	# echo $i;
+	# echo ----;
+	cat /sys/kernel/debug/tracing/per_cpu/$i/trace >> "$data_path"
+	# echo ----
+done
 
 prepare_to_gen_flamegraph
 
