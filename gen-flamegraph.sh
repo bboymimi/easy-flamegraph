@@ -11,6 +11,7 @@ HEADER_INFO=true
 PCRE_STRING=""
 KERNEL_VERSION=""
 MAXCPUNR=0
+MEM_FLAME=false
 PER_CPU_FLAMEGRAPH=false
 PSVG=""
 PFOLDED=""
@@ -31,6 +32,7 @@ usage_function() {
 	    echo "	-p [true|false] -  generate the flamegraph for each CPU"
 	    echo "	-I [true|false] - default:[false], the flag will disable printing the info from perf header"
 	    echo "	--ftrace - indicate that the input data is from ftrace/trace-cmd"
+	    echo "	--mem-flame - generate the flamegraph based on the byte(ftrace/trace-cmd only)"
 	    echo "	--pcre - use the Perl Compatible Regular Expression"
 	    echo "	--subtitle - the subtitle of the flamegraph"
 	    echo "	--title - the title of the framegraph"
@@ -95,7 +97,7 @@ tracing_source_examination() {
 		ftrace)
 			if $PER_CPU_FLAMEGRAPH; then
 				echo "${FUNCNAME[0]}: The per-cpu flamegraph for ftrace is not implemented!!"
-				exit 1
+				#exit 1
 			fi
 			ftrace_examination
 			;;
@@ -131,6 +133,8 @@ flamegraph_init() {
 __generate_flamegraph() {
 	local SVG
 	local SUBTITLE="$3"
+	local TRACE_CMD_OTIONS="--process_name"
+	local COUNT_NAME=""
 
 	case "$TRACE_SRC" in
 		perf)
@@ -139,7 +143,12 @@ __generate_flamegraph() {
 			;;
 		ftrace)
 			# extract the call stack for the flamegraph.pl to generate the svg interactive graph
-			"${FPATH}"stackcollapse-tracecmd.pl --process_name "$1" > "$5"
+			if $MEM_FLAME; then
+				TRACE_CMD_OTIONS="$FTRACE_OPTIONS --page_type --page_order"
+				COUNT_NAME="--countname KB"
+			fi
+
+			"${FPATH}"stackcollapse-tracecmd.pl $TRACE_CMD_OTIONS "$1" > "$5"
 			# TODO: The header info of ftrace still need to be implemented
 			if [ $? -ne 0 ]; then
 				echo "${FUNCNAME[0]}: Invalid command \"${FPATH}stackcollapse-tracecmd.pl --all $1 > $5"\"
@@ -155,17 +164,17 @@ __generate_flamegraph() {
 	# grep the required string
 	if [[ "$GREP_STRINGS" == "" && "$PCRE_STRING" == "" ]]; then
 		#cat ${PFOLDED} | ${FPATH}flamegraph.pl > ${PSVG}
-		grep -Pv 'addr2line|stackcollapse' "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" > "$4"
+		grep -Pv 'addr2line|stackcollapse' "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" $COUNT_NAME > "$4"
 	elif [[ "$PCRE_STRING" != "" ]]; then
 		# add the string name to the SVG name to identify the file easily
 		SVG="${5%.folded}.pcre.svg"
 		SUBTITLE="$SUBTITLE pcre:\"$PCRE_STRING\""
-		grep -P "$PCRE_STRING" "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" > "$SVG"
+		grep -P "$PCRE_STRING" "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" $COUNT_NAME > "$SVG"
 	else
 		# add the string name to the SVG name to identify the file easily
 		SVG="${5%.folded}.S$GREP_STRINGS.svg"
 		SUBTITLE="$SUBTITLE grep:\"$GREP_STRINGS\""
-		grep -E "$GREP_STRINGS" "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" > "$SVG"
+		grep -E "$GREP_STRINGS" "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" $COUNT_NAME > "$SVG"
 	fi
 
 	# drop the intermediate data
@@ -343,6 +352,10 @@ do
 			;;
 		--ftrace)
 			TRACE_SRC="ftrace"
+			shift
+			;;
+		--mem-flame)
+			MEM_FLAME=true
 			shift
 			;;
 		--pcre)
