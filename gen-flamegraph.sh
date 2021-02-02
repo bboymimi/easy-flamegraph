@@ -144,7 +144,7 @@ __generate_flamegraph() {
 		ftrace)
 			# extract the call stack for the flamegraph.pl to generate the svg interactive graph
 			if $MEM_FLAME; then
-				TRACE_CMD_OTIONS="$FTRACE_OPTIONS --page_type --page_order"
+				TRACE_CMD_OTIONS="$TRACE_CMD_OTIONS --page_type --page_order"
 				COUNT_NAME="--countname KB"
 			fi
 
