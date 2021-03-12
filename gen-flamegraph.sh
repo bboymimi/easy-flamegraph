@@ -135,6 +135,7 @@ __generate_flamegraph() {
 	local SUBTITLE="$3"
 	local TRACE_CMD_OTIONS="--process_name"
 	local COUNT_NAME=""
+	local COLORS="java"
 
 	case "$TRACE_SRC" in
 		perf)
@@ -161,20 +162,23 @@ __generate_flamegraph() {
 			;;
 	esac
 
+	if $MEM_FLAME; then
+		COLORS="mem"
+	fi
 	# grep the required string
 	if [[ "$GREP_STRINGS" == "" && "$PCRE_STRING" == "" ]]; then
 		#cat ${PFOLDED} | ${FPATH}flamegraph.pl > ${PSVG}
-		grep -Pv 'addr2line|stackcollapse' "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" $COUNT_NAME > "$4"
+		grep -Pv 'addr2line|stackcollapse' "$5" | "${FPATH}"flamegraph.pl --color "$COLORS" --hash --bgcolors "#c3c7c7" --title "$2" --subtitle "$SUBTITLE" $COUNT_NAME > "$4"
 	elif [[ "$PCRE_STRING" != "" ]]; then
 		# add the string name to the SVG name to identify the file easily
 		SVG="${5%.folded}.pcre.svg"
 		SUBTITLE="$SUBTITLE pcre:\"$PCRE_STRING\""
-		grep -P "$PCRE_STRING" "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" $COUNT_NAME > "$SVG"
+		grep -P "$PCRE_STRING" "$5" | "${FPATH}"flamegraph.pl --color "$COLORS" --hash --bgcolors "#c3c7c7" --title "$2" --subtitle "$SUBTITLE" $COUNT_NAME > "$SVG"
 	else
 		# add the string name to the SVG name to identify the file easily
 		SVG="${5%.folded}.S$GREP_STRINGS.svg"
 		SUBTITLE="$SUBTITLE grep:\"$GREP_STRINGS\""
-		grep -E "$GREP_STRINGS" "$5" | "${FPATH}"flamegraph.pl --color java --title "$2" --subtitle "$SUBTITLE" $COUNT_NAME > "$SVG"
+		grep -E "$GREP_STRINGS" "$5" | "${FPATH}"flamegraph.pl --color "$COLORS" --hash --bgcolors "#c3c7c7" --title "$2" --subtitle "$SUBTITLE" $COUNT_NAME > "$SVG"
 	fi
 
 	# drop the intermediate data
