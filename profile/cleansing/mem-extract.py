@@ -10,6 +10,7 @@ position = 1
 filedir = "/var/log/easy-flamegraph/sysinfo/mem-stat/"
 outputdir = "./"
 month = "\d+"
+separate = None
 
 # entry point
 while (arguments >= position):
@@ -24,6 +25,8 @@ while (arguments >= position):
         month = sys.argv[position + 1]
         position = position + 1
         # print(month)
+    elif sys.argv[position] == "-s":
+        separate = 1
     position = position + 1
 
 if filedir:
@@ -35,9 +38,9 @@ print("outputdir: " + outputdir)
 
 
 # (1). Parse the meminfo.log
-parse_to_csv("meminfo", filedir, outputdir, month)
+parse_to_csv("meminfo", filedir, outputdir, month, separate)
 
 # (2). Parse the vmstat.log
-parse_to_csv("vmstat", filedir, outputdir, month)
+parse_to_csv("vmstat", filedir, outputdir, month, separate)
 
 # sys.exit(0)
