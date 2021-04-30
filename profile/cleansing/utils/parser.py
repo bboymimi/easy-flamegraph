@@ -2,8 +2,8 @@ import csv
 import pandas as pd
 import pathlib
 import re
-from .regex import get_date
-from .regex import get_value
+from utils.regex import get_date
+from utils.regex import get_value
 
 
 def parse_to_csv(filetype=None, filedir=None, outputdir=None, month=None,
