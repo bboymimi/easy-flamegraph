@@ -35,6 +35,7 @@ install:
 	$(INSTALL_BIN) profile/sysinfo/irq-stat $(EZ_SYSINFO_DIR)
 	$(INSTALL_BIN) profile/sysinfo/mem-stat $(EZ_SYSINFO_DIR)
 	$(INSTALL_BIN) profile/sysinfo/net-stat $(EZ_SYSINFO_DIR)
+	$(INSTALL_BIN) profile/sysinfo/process-stat $(EZ_SYSINFO_DIR)
 	$(INSTALL_DATA) profile/easy-flamegraph.conf $(EZ_DEFAULT_DIR)
 	$(INSTALL_DATA) profile/easy-flamegraph-cron $(EZ_CRON_DIR)
 

@@ -1,0 +1,45 @@
+#!/bin/bash
+EASY_FLAMEGRAPH_DEFAULT="/etc/default/easy-flamegraph.conf"
+
+collect_info() {
+	output_dir="$EASY_FLAME_SYSINFO_LOG_DIR"/process-stat
+	mkdir -p "$output_dir"
+
+	date_sys=$(date '+%Y.%m.%d-%H.%M.%S')
+
+	{
+		echo "---------------------------------------------"
+		echo "$date_sys"
+		ps aux
+
+	}>>"$output_dir"/ps-aux.log
+
+}
+
+# Config file
+if [ -n "$1" ] && [ -r "$1" ]; then
+	EASY_FLAMEGRAPH_DEFAULT="$1"
+	echo "The assigned config file is used: $EASY_FLAMEGRAPH_DEFAULT"
+else
+	echo "There is no \$1 parameter assigned. Use the default config: $EASY_FLAMEGRAPH_DEFAULT"
+fi
+
+[ -r "$EASY_FLAMEGRAPH_DEFAULT" ] && . "$EASY_FLAMEGRAPH_DEFAULT"
+
+if ! $USE_EASY_FLAMEGRAPH; then
+	echo "Weird!! The config file is null"
+	exit 0
+fi
+
+# source lib
+[ -r "$EASY_FLAME_LIB_DIR"/lib ] && . "$EASY_FLAME_LIB_DIR"/lib
+
+if ! "$USE_PROCESS_STAT"; then
+	debug_log "USE_PROCESS_STAT: disabled"
+	exit 0
+fi
+
+debug_log "USE_PROCESS_STAT: enabled"
+
+# for collecting info, we can run it in background
+collect_info
