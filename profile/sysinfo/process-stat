@@ -14,6 +14,12 @@ collect_info() {
 
 	}>>"$output_dir"/ps-aux.log
 
+	{
+		echo "---------------------------------------------"
+		echo "$date_sys"
+		cat /proc/*/status
+
+	}>>"$output_dir"/proc-pid-status.log
 }
 
 # Config file
