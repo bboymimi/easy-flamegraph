@@ -1,4 +1,5 @@
 import csv
+import os
 import pandas as pd
 import pathlib
 import re
@@ -6,17 +7,16 @@ from utils.regex import get_date
 from utils.regex import get_value
 
 
-def parse_to_csv(filetype=None, filedir=None, outputdir=None, month=None,
-                 separate=None):
-
+def parse_to_csv(filetype=None, filename=None, outputdir=None, month=None,
+                 separate=False):
     meminfo_params = {}
     m_date = None
     date_msg = None
     df_all = pd.DataFrame()
 
     try:
-        print("Parsing " + filedir + filetype + ".log...")
-        with open(filedir + filetype + '.log', 'r') as fp:
+        with open(filename, 'r') as fp:
+            print("Parsing " + filename)
             line = fp.readline()
 
             count = 0
@@ -46,7 +46,7 @@ def parse_to_csv(filetype=None, filedir=None, outputdir=None, month=None,
                 param, value = get_value(filetype, line)
                 if param is not None:
                     meminfo_params[param] = meminfo_params.get(param, [])
-                    if separate is not None:
+                    if separate:
                         meminfo_params[param].append([date_msg, value])
                     else:
                         count = count + 1
@@ -72,19 +72,31 @@ def parse_to_csv(filetype=None, filedir=None, outputdir=None, month=None,
                 # print("fp.readline:" + line)
                 # i = i + 1
     except OSError:
-        print("Cannot read the file: %s, May be it doesn't exist!" % (filedir +
-              'meminfo1.log'))
+        if filename == "":
+            print("[%s] Filename is empty! Please assign the file to parse or "
+                  "check the default path." % filetype)
+        else:
+            print("[%s] Cannot read \"%s\", May be it doesn't exist!"
+                  % (filetype, filename))
+        return
 
-    key = None
+    key = []
     keys = meminfo_params.keys()
-    if separate is not None:
+    if list(keys) == []:
+        print("[%s] No keys found in %s!, the format is not correct!" %
+              (filetype, filename))
+        return
+
+    if separate:
         for key in list(keys):
             pathlib.Path(outputdir).mkdir(parents=True, exist_ok=True)
             with open(outputdir + '/' + key + '.csv', 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow(["date", "value"])
                 writer.writerows(meminfo_params[key])
+        print("The .csv file is separated under: " + os.getcwd())
     else:
         df_all = pd.DataFrame(meminfo_params)
         df_all.set_index('date', inplace=True)
         df_all.to_csv(outputdir + '/' + filetype + ".csv")
+        print("The " + outputdir + '/' + filetype + ".csv" + " is generated")
