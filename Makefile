@@ -22,34 +22,34 @@ install:
 	mkdir -p $(DESTDIR)$(EZ_CRON_DIR)
 	mkdir -p $(DESTDIR)$(EZ_DEFAULT_DIR)
 
-	$(INSTALL_BIN) gen-flamegraph.sh $(EZ_LIB_DIR)
-	$(INSTALL_BIN) profile/entry $(EZ_LIB_DIR)
-	$(INSTALL_BIN) profile/lib $(EZ_LIB_DIR)
-	$(INSTALL_BIN) profile/ezcli $(EZ_LIB_DIR)
-	$(INSTALL_BIN) profile/conditions/cpu $(EZ_COND_DIR)
-	$(INSTALL_BIN) profile/conditions/io/io $(EZ_COND_DIR_IO)
-	$(INSTALL_BIN) profile/conditions/io/io_ftrace $(EZ_COND_DIR_IO)
-	$(INSTALL_BIN) profile/conditions/mem/mem $(EZ_COND_DIR_MEM)
-	$(INSTALL_BIN) profile/conditions/mem/mem_ftrace $(EZ_COND_DIR_MEM)
-	$(INSTALL_BIN) profile/sysinfo/bcache $(EZ_SYSINFO_DIR)
-	$(INSTALL_BIN) profile/sysinfo/irq-stat $(EZ_SYSINFO_DIR)
-	$(INSTALL_BIN) profile/sysinfo/mem-stat $(EZ_SYSINFO_DIR)
-	$(INSTALL_BIN) profile/sysinfo/net-stat $(EZ_SYSINFO_DIR)
-	$(INSTALL_BIN) profile/sysinfo/process-stat $(EZ_SYSINFO_DIR)
-	$(INSTALL_DATA) profile/easy-flamegraph.conf $(EZ_DEFAULT_DIR)
-	$(INSTALL_DATA) profile/easy-flamegraph-cron $(EZ_CRON_DIR)
+	$(INSTALL_BIN) gen-flamegraph.sh $(DESTDIR)$(EZ_LIB_DIR)
+	$(INSTALL_BIN) profile/entry $(DESTDIR)$(EZ_LIB_DIR)
+	$(INSTALL_BIN) profile/lib $(DESTDIR)$(EZ_LIB_DIR)
+	$(INSTALL_BIN) profile/ezcli $(DESTDIR)$(EZ_LIB_DIR)
+	$(INSTALL_BIN) profile/conditions/cpu $(DESTDIR)$(EZ_COND_DIR)
+	$(INSTALL_BIN) profile/conditions/io/io $(DESTDIR)$(EZ_COND_DIR_IO)
+	$(INSTALL_BIN) profile/conditions/io/io_ftrace $(DESTDIR)$(EZ_COND_DIR_IO)
+	$(INSTALL_BIN) profile/conditions/mem/mem $(DESTDIR)$(EZ_COND_DIR_MEM)
+	$(INSTALL_BIN) profile/conditions/mem/mem_ftrace $(DESTDIR)$(EZ_COND_DIR_MEM)
+	$(INSTALL_BIN) profile/sysinfo/bcache $(DESTDIR)$(EZ_SYSINFO_DIR)
+	$(INSTALL_BIN) profile/sysinfo/irq-stat $(DESTDIR)$(EZ_SYSINFO_DIR)
+	$(INSTALL_BIN) profile/sysinfo/mem-stat $(DESTDIR)$(EZ_SYSINFO_DIR)
+	$(INSTALL_BIN) profile/sysinfo/net-stat $(DESTDIR)$(EZ_SYSINFO_DIR)
+	$(INSTALL_BIN) profile/sysinfo/process-stat $(DESTDIR)$(EZ_SYSINFO_DIR)
+	$(INSTALL_DATA) profile/easy-flamegraph.conf $(DESTDIR)$(EZ_DEFAULT_DIR)
+	$(INSTALL_DATA) profile/easy-flamegraph-cron $(DESTDIR)$(EZ_CRON_DIR)
 
 	git submodule update --init FlameGraph
 	$(CP) -r ./FlameGraph/ $(DESTDIR)$(EZ_LIB_DIR)
 
 uninstall:
-	rm -rf $(EZ_LIB_DIR)/FlameGraph/
-	rm -f $(EZ_CRON_DIR)/easy-flamegraph-cron
-	rm -f $(EZ_DEFAULT_DIR)/easy-flamegraph.conf
-	rm -f $(EZ_LIB_DIR)/gen-flamegraph.sh
-	rm -f $(EZ_LIB_DIR)/entry
-	rm -f $(EZ_LIB_DIR)/ezcli
-	rm -f $(EZ_LIB_DIR)/lib
-	rm -rf $(EZ_LIB_DIR)/conditions
-	rm -rf $(EZ_LIB_DIR)/sysinfo
-	rmdir --ignore-fail-on-non-empty $(EZ_LIB_DIR)
+	rm -rf $(DESTDIR)$(EZ_LIB_DIR)/FlameGraph/
+	rm -f $(DESTDIR)$(EZ_CRON_DIR)/easy-flamegraph-cron
+	rm -f $(DESTDIR)$(EZ_DEFAULT_DIR)/easy-flamegraph.conf
+	rm -f $(DESTDIR)$(EZ_LIB_DIR)/gen-flamegraph.sh
+	rm -f $(DESTDIR)$(EZ_LIB_DIR)/entry
+	rm -f $(DESTDIR)$(EZ_LIB_DIR)/ezcli
+	rm -f $(DESTDIR)$(EZ_LIB_DIR)/lib
+	rm -rf $(DESTDIR)$(EZ_LIB_DIR)/conditions
+	rm -rf $(DESTDIR)$(EZ_LIB_DIR)/sysinfo
+	rmdir --ignore-fail-on-non-empty $(DESTDIR)$(EZ_LIB_DIR)
