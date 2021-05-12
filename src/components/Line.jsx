@@ -16,8 +16,8 @@ class Line extends Component {
       const node = this.node
 	// append the svg object to the body of the page
   var margin = {top: 10, right: 30, bottom: 30, left: 60},
-    width = 1200 - margin.left - margin.right,
-    height = 450 - margin.top - margin.bottom;
+    width = 600 - margin.left - margin.right,
+    height = 300 - margin.top - margin.bottom;
 
    var svg = d3.select(node)
   .append("svg")
@@ -113,11 +113,27 @@ class Line extends Component {
 
     svg.on("click", (event) => {
       const { changeState } = this.props;
-      changeState();
       const {date, value} = bisect(d3.pointer(event)[0]);
 
       console.log(`${formatValue(value)} ${formatDate(date)}`);
       console.log(`${value} ${date}`);
+      console.log(date.getFullYear());
+      console.log(date.getMonth());
+      console.log(date.getDate());
+      console.log(date.getHours());
+      console.log(date.getMinutes());
+      console.log(date.getSeconds());
+      const year = date.getFullYear();
+      const month = ("0" + (date.getMonth() + 1)).slice(-2);
+      const day = ("0" + date.getDate()).slice(-2);
+      const hour = ("0" + date.getHours()).slice(-2);
+      const minute = ("0" + date.getMinutes()).slice(-2);
+      const subsys = "cpu";
+      const flamename = subsys + "/" + year + "-" + month + "-" + day + "-" +
+		    hour + ":" + minute + "." + subsys + ".script"; 
+      //console.log(flamename);
+      changeState(flamename);
+
     });
 
     svg.on("touchmove mousemove", function(event) {
@@ -133,6 +149,7 @@ class Line extends Component {
     function bisect(mx) {
       const bisect_r = d3.bisector(d => d.date).left;
       const date = x.invert(mx);
+      console.log(date + " " + mx);
       const index = bisect_r(data, date, 1);
       const a = data[index - 1];
       const b = data[index];
@@ -259,7 +276,7 @@ class Line extends Component {
     return (
       <div id="my_dataviz">
         <svg ref={node => this.node = node}
-          width={1400} height={450}>
+          width={600} height={300}>
         </svg>
       </div>
     );

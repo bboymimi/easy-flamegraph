@@ -40,10 +40,13 @@ class Memory extends Component {
     //this.createScatter()
   }
 
-  changeState() {
-    const set_value = this.state.value === 'test/perf.stacks01' ?
-      'test/numad-perf.script' : 'test/perf.stacks01';
-    this.setState({ value: set_value });
+  changeState(flamename) {
+    console.log("in changeState:" + flamename);
+    //const set_value = this.state.value === 'test/perf.stacks01' ?
+    //  'test/numad-perf.script' : 'test/perf.stacks01';
+    //this.setState({ value: set_value });
+    //this.setState({ value: 'test/' + flamename });
+    this.setState({ value: this.state.pname + flamename });
   }
 
   changeState2() {
