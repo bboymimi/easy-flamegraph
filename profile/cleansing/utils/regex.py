@@ -1,7 +1,7 @@
 import re
 
 regexp_arr = {
-    "meminfo": "^(\w+):\s+(\d+)",
+    "meminfo": "^(\w+\(*\w+\)*):\s+(\d+)",
     "vmstat": "^(\w+)\s+(\d+)",
 }
 
