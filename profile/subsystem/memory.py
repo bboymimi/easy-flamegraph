@@ -4,11 +4,66 @@ from __future__ import print_function
 from bokeh.layouts import column, layout
 from bokeh.plotting import ColumnDataSource, figure
 from bokeh.palettes import magma
-from bokeh.models import HoverTool, Panel, PreText, RangeTool
+from bokeh.models import HoverTool, OpenURL, Panel, PreText, RangeTool, TapTool
 import numpy as np
 import os
 import pandas as pd
 import random
+
+
+def build_link(default_directory="/var/log/easy-flamegraph"):
+    """The current link tap implementation is to show the svg file. Finally,
+    the specific html for a time stamp replace the svg file to provide a more
+    comprehensive summary.
+    """
+
+    filenames = []
+    filelist = {}
+    link_dir = os.path.join(default_directory, 'mem')
+
+    if not os.path.isdir(link_dir):
+        print("The {} to build the link tables isn't a "
+              "folder!".format(link_dir))
+        return {}
+
+    """ Currently, the link is to open a svg file. I want to support the html
+    summary in the future.
+    """
+    for f in os.scandir(link_dir):
+        if f.name.endswith(".svg"):
+            break
+    else:
+        """Scan all the files under the folder but doesn't find any .svg
+        """
+        print("There is no svg files in the {} directory!".format(link_dir))
+        return {}
+
+    for _, _, filenames in os.walk(link_dir):
+        break
+
+    """ '202105130058': '2021-05-13_005809.mem.memtrace.svg' """
+    for f in filenames:
+        numeric_date = ""
+        for c in f:
+            if c.isnumeric():
+                numeric_date = numeric_date + c
+        """The last two digits seconds part will be dropped"""
+        filelist[numeric_date[:-2]] = f
+
+    return filelist
+
+
+def link_list(df, link_table):
+    links = []
+    for date in df['date']:
+        numeric_date = ""
+        for c in date:
+            if c.isnumeric():
+                numeric_date = numeric_date + c
+        """The last two digits(seconds part will be dropped)"""
+        links.append(link_table[numeric_date[:-2]])
+
+    return links
 
 
 def plot_meminfo_group(df_meminfo, group_list, color_dict, key, x_label="",
@@ -17,7 +72,10 @@ def plot_meminfo_group(df_meminfo, group_list, color_dict, key, x_label="",
     """ Set the figure high to 600 if it's bigger than 10 lines to be drawed"""
     plot_height = 600 if len(group_list) > 10 else 300
     source = {}
-    TOOLTIPS = [("(date, close)", "(@date{%F-%T}, @close)")]
+    TOOLBOX = "pan,wheel_zoom,box_zoom,reset"
+    if "link" in df_meminfo.keys():
+        TOOLBOX = TOOLBOX + ",tap"
+    TOOLTIPS = [("(date, value)", "(@date{%F-%T}, @value)")]
 
     hover = HoverTool(
         tooltips=TOOLTIPS,
@@ -32,8 +90,8 @@ def plot_meminfo_group(df_meminfo, group_list, color_dict, key, x_label="",
     bigger than 500.
     """
     date_max = 500 if len(dates) > 500 else len(dates) - 1
-    p = figure(plot_height=plot_height, plot_width=800, tools="xpan",
-               toolbar_location=None, x_axis_type="datetime",
+    p = figure(plot_height=plot_height, plot_width=800, tools=TOOLBOX,
+               x_axis_type="datetime",
                x_axis_location="below", background_fill_color="#efefef",
                x_range=(dates[0], dates[date_max]), title=key)
 
@@ -43,13 +101,20 @@ def plot_meminfo_group(df_meminfo, group_list, color_dict, key, x_label="",
 
     for i in group_list:
         df_meminfo[i] = pd.to_numeric(df_meminfo[i])
-        source[i] = ColumnDataSource(data=dict(date=dates,
-                                               close=df_meminfo[i].diff()))
+        cs_dict = dict(date=dates, value=df_meminfo[i].diff())
+        if "link" in df_meminfo.keys():
+            cs_dict['link'] = df_meminfo['link']
+        source[i] = ColumnDataSource(data=cs_dict)
 
-        p.line('date', 'close', source=source[i], legend=i,
+        p.line('date', 'value', source=source[i], legend=i,
                line_color=color_dict[i])
 
     p.legend.click_policy = "hide"
+
+    if "link" in df_meminfo.keys():
+        taptool = p.select(type=TapTool)
+        url_tap = "/var/log/easy-flamegraph/mem/@link"
+        taptool.callback = OpenURL(url=url_tap)
 
     select = figure(title="Drag the middle and edges of the selection box to"
                     " change the range above",
@@ -62,7 +127,7 @@ def plot_meminfo_group(df_meminfo, group_list, color_dict, key, x_label="",
     range_tool.overlay.fill_alpha = 0.2
 
     for i in group_list:
-        select.line('date', 'close', source=source[i],
+        select.line('date', 'value', source=source[i],
                     line_color=color_dict[i])
 
     select.ygrid.grid_line_color = None
@@ -71,7 +136,7 @@ def plot_meminfo_group(df_meminfo, group_list, color_dict, key, x_label="",
     return select, p
 
 
-def plot_meminfo():
+def plot_meminfo(link_table={}):
     group_dict = {}
     plot_list = []
     meminfo_path = ""
@@ -111,6 +176,8 @@ def plot_meminfo():
 
     meminfo_path = os.path.join(os.getcwd(), 'meminfo.csv')
     df_meminfo = pd.read_csv(meminfo_path)
+    if link_table:
+        df_meminfo['link'] = link_list(df_meminfo, link_table)
     parameter_name = df_meminfo.keys()
 
     """create a color iterator"""
@@ -137,7 +204,7 @@ def plot_meminfo():
     return plot_list
 
 
-def plot_vmstat():
+def plot_vmstat(link_table):
     group_dict = {}
     plot_list = []
     vmstat_path = ""
@@ -267,6 +334,8 @@ def plot_vmstat():
 
     vmstat_path = os.path.join(os.getcwd(), 'vmstat.csv')
     df_vmstat = pd.read_csv(vmstat_path)
+    if link_table:
+        df_vmstat['link'] = link_list(df_vmstat, link_table)
     parameter_name = df_vmstat.keys()
 
     """create a color iterator"""
@@ -295,9 +364,13 @@ def plot_vmstat():
 
 
 def memory_tab():
+    """Store the tap link for the chart"""
+    link_table = {}
+    link_table = build_link()
+
     l_mem = layout(
         [
-            [plot_meminfo(), plot_vmstat()],
+            [plot_meminfo(link_table), plot_vmstat(link_table)],
         ],
         sizing_mode='scale_both'
     )
