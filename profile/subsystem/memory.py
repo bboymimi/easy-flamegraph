@@ -61,6 +61,9 @@ def link_list(df, link_table):
             if c.isnumeric():
                 numeric_date = numeric_date + c
         """The last two digits(seconds part will be dropped)"""
+        if numeric_date[:-2] not in link_table.keys():
+            link_table[numeric_date[:-2]] = None
+            print("{} is not in link_table.".format(numeric_date[:-2]))
         links.append(link_table[numeric_date[:-2]])
 
     return links
