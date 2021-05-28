@@ -69,8 +69,8 @@ def link_list(df, link_table):
     return links
 
 
-def plot_meminfo_group(df_meminfo, group_list, color_dict, key, x_label="",
-                       y_label=""):
+def plot_meminfo_group(df_meminfo, group_list, color_dict, key, link_prefix,
+                       x_label="", y_label=""):
 
     """ Set the figure high to 600 if it's bigger than 10 lines to be drawed"""
     plot_height = 600 if len(group_list) > 10 else 300
@@ -116,7 +116,8 @@ def plot_meminfo_group(df_meminfo, group_list, color_dict, key, x_label="",
 
     if "link" in df_meminfo.keys():
         taptool = p.select(type=TapTool)
-        url_tap = "/var/log/easy-flamegraph/mem/@link"
+        url_tap = os.path.join(link_prefix, "mem/")
+        url_tap = url_tap + "@link"
         taptool.callback = OpenURL(url=url_tap)
 
     select = figure(title="Drag the middle and edges of the selection box to"
@@ -139,7 +140,7 @@ def plot_meminfo_group(df_meminfo, group_list, color_dict, key, x_label="",
     return select, p
 
 
-def plot_meminfo(link_table={}):
+def plot_meminfo(csv_source, link_prefix, link_table={}):
     group_dict = {}
     plot_list = []
     meminfo_path = ""
@@ -177,7 +178,7 @@ def plot_meminfo(link_table={}):
     pre = PreText(text=meminfo_pretext, width=500, height=20)
     plot_list.append(pre)
 
-    meminfo_path = os.path.join(os.getcwd(), 'meminfo.csv')
+    meminfo_path = os.path.join(csv_source, 'meminfo.csv')
     df_meminfo = pd.read_csv(meminfo_path)
     if link_table:
         df_meminfo['link'] = link_list(df_meminfo, link_table)
@@ -200,14 +201,15 @@ def plot_meminfo(link_table={}):
 
     for key in group_dict.keys():
         select, p = plot_meminfo_group(df_meminfo, group_dict[key],
-                                       color_dict, key, "date", "KB/count")
+                                       color_dict, key, link_prefix, "date",
+                                       "KB/count")
 
         plot_list.append(column(select, p))
 
     return plot_list
 
 
-def plot_vmstat(link_table):
+def plot_vmstat(csv_source, link_prefix, link_table):
     group_dict = {}
     plot_list = []
     vmstat_path = ""
@@ -335,7 +337,7 @@ def plot_vmstat(link_table):
     pre = PreText(text=vmstat_pretext, width=500, height=20)
     plot_list.append(pre)
 
-    vmstat_path = os.path.join(os.getcwd(), 'vmstat.csv')
+    vmstat_path = os.path.join(csv_source, 'vmstat.csv')
     df_vmstat = pd.read_csv(vmstat_path)
     if link_table:
         df_vmstat['link'] = link_list(df_vmstat, link_table)
@@ -358,7 +360,7 @@ def plot_vmstat(link_table):
 
     for key in group_dict.keys():
         select, p = plot_meminfo_group(df_vmstat, group_dict[key],
-                                       color_dict, key, "date",
+                                       color_dict, key, link_prefix, "date",
                                        "KB/count/pages")
 
         plot_list.append(column(select, p))
@@ -366,14 +368,16 @@ def plot_vmstat(link_table):
     return plot_list
 
 
-def memory_tab():
+def memory_tab(input_folder, output_folder, csv_source, link_prefix):
     """Store the tap link for the chart"""
     link_table = {}
-    link_table = build_link()
+    link_table = build_link(input_folder)
+    link_prefix = link_prefix if link_prefix else input_folder
 
     l_mem = layout(
         [
-            [plot_meminfo(link_table), plot_vmstat(link_table)],
+            [plot_meminfo(csv_source, link_prefix, link_table),
+             plot_vmstat(csv_source, link_prefix, link_table)],
         ],
         sizing_mode='scale_both'
     )
