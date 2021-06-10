@@ -95,9 +95,17 @@ def main():
     tabs = Tabs(tabs=[tab_cpu, tab_memory, tab_io])
 
     # output to static HTML file
-    output_file(os.path.join(output_folder, "summary.html"))
+    output_file_name = os.path.join(output_folder, "summary.html")
+    output_file(output_file_name)
 
     show(tabs)
+
+    print("Please view the dashbaord by the command: \n"
+          "google-chrome-stable {} \n"
+          "or\n"
+          "firefox {}\n"
+          "It will need some time to open the html when the profiling data is "
+          "huge".format(output_file_name, output_file_name))
 
 
 if __name__ == '__main__':
