@@ -15,14 +15,14 @@ condition_check() {
 	#
 	# Try to generate the mpstat report to the
 	# /var/log/easy-flamegraph/sysinfo/mpstat-P-ALL.log.
-	perl -E 'say "-" x 45' >> "${EASY_FLAME_SYSINFO_LOG_DIR}"/mpstat-P-ALL.log
-	date '+%Y.%m.%d-%H.%M.%S' >> "${EASY_FLAME_SYSINFO_LOG_DIR}"/mpstat-P-ALL.log
+	perl -E 'say "-" x 45' >> "${EASY_FLAME_SYSINFO_LOG_DIR}"/mpstat.log
+	date '+%Y.%m.%d-%H.%M.%S' >> "${EASY_FLAME_SYSINFO_LOG_DIR}"/mpstat.log
 
 	# This is the core to calculate the idle rate. In order to make the
 	# dashboard line chart consistent with the flamegraph CPU utilization.
 	# We capture the idle rate for every processors and the system instead
 	# of doing that in a separate script in sysinfo/.
-	idle_rate="$(mpstat -P ALL  1 1| grep Average|tee -a "${EASY_FLAME_SYSINFO_LOG_DIR}"/mpstat-P-ALL.log | grep -P 'Average:\s+all'| perl -n -e '/Average:\s+all.+\s(\d+)\.(\d+)$/; print $1;')"
+	idle_rate="$(mpstat -P ALL  1 1| grep Average|tee -a "${EASY_FLAME_SYSINFO_LOG_DIR}"/mpstat.log | grep -P 'Average:\s+all'| perl -n -e '/Average:\s+all.+\s(\d+)\.(\d+)$/; print $1;')"
 
 	debug_log "Idle rate: $idle_rate"
 	cpu_rate=$((100-idle_rate))
