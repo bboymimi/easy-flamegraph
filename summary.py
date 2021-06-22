@@ -97,6 +97,8 @@ def main():
         dashboard.append(output_dir)
         dashboard.append("--output-folder")
         dashboard.append(output_dir)
+        dashboard.append("--csv-source")
+        dashboard.append(output_dir)
     else:
         print("The output folder {} doesn't exist!!".format(output_dir))
         sys.exit(1)
