@@ -4,7 +4,7 @@ import os
 import sys
 from utils.parser import parse_to_csv
 
-ez_dir = "/var/log/easy-flamegraph/sysinfo/mem-stat/"
+ez_dir = "/var/log/easy-flamegraph/"
 
 
 def initialize_arguments(current_dir):
@@ -49,6 +49,12 @@ def initialize_arguments(current_dir):
         help='The /proc/meminfo file to be transferred to csv',
         default=argparse.SUPPRESS)
     parser.add_argument(
+        '--mpstat',
+        type=str,
+        nargs='?',
+        help='Transfer The mpstat command log to csv',
+        default=argparse.SUPPRESS)
+    parser.add_argument(
         '--vmstat',
         type=str,
         nargs='?',
@@ -59,8 +65,8 @@ def initialize_arguments(current_dir):
 
 
 def init_default_paths(args, current_dir):
-    ftype_name = {}
-    ftypes = ["meminfo", "vmstat"]
+    ftype_names = {}
+    ftypes = {"sysinfo": ["mpstat"], "sysinfo/mem-stat": ["meminfo", "vmstat"]}
     output_folder = ""
     search_folders = [ez_dir, current_dir]
 
@@ -76,13 +82,15 @@ def init_default_paths(args, current_dir):
     """If the specific file type is assigned, just skip the possible input file
     source search.
     """
-
     if hasattr(args, "meminfo"):
         if args.meminfo is not None:
-            return ftype_name, output_folder
+            return ftype_names, output_folder
+    if hasattr(args, "mpstat"):
+        if args.mpstat is not None:
+            return ftype_names, output_folder
     if hasattr(args, "vmstat"):
         if args.vmstat is not None:
-            return ftype_name, output_folder
+            return ftype_names, output_folder
 
     """Set up the default input folder"""
     if hasattr(args, "input_folder"):
@@ -94,18 +102,26 @@ def init_default_paths(args, current_dir):
                 args.input_folder))
             sys.exit(1)
 
+    ftype_found = False
     for folder in search_folders:
-        for ftype in ftypes:
-            if os.path.isfile(os.path.join(folder, ftype + '.log')):
-                ftype_name[ftype] = os.path.join(folder, ftype + '.log')
-            else:
-                """If any ftype can't find the file, proceed to next folder"""
-                break
+        for subfolder in ftypes.keys():
+            for ftype in ftypes[subfolder]:
+                subfix = os.path.join(subfolder, ftype + '.log')
+                ftype_name = os.path.join(folder, subfix)
+                if os.path.isfile(ftype_name):
+                    ftype_found = True
+                    ftype_names[ftype] = ftype_name
+                else:
+                    """If any ftype can't find the file, proceed to next
+                    folder"""
+                    print("The folder cannot be found: {}".format(ftype_name))
         else:
-            """If the ftype folders loop are all traversed, it means all the
-            ftype files can be found in the folder.
+            """If subfolders are all traversed, and there is at least one ftype
+            found in this folder. Stop search next folders. We don't need to
+            have all the files.
             """
-            break
+            if ftype_found is True:
+                break
     else:
         """All the folders are traversed, the ftype cannot find in all
         folders.
@@ -116,14 +132,14 @@ def init_default_paths(args, current_dir):
 
         sys.exit(1)
 
-    return ftype_name, output_folder
+    return ftype_names, output_folder
 
 
 def main():
     current_dir = os.getcwd()
     parser = initialize_arguments(current_dir)
     args = parser.parse_args()
-    ftype_name, output_folder = init_default_paths(args, current_dir)
+    ftype_names, output_folder = init_default_paths(args, current_dir)
     show_usage = True
 
     # (1). Parse the meminfo.log
@@ -131,7 +147,7 @@ def main():
         show_usage = False
         if args.all or args.meminfo is None:
             # The user just input the --meminfo and doesn't have any appends
-            parse_to_csv("meminfo", ftype_name['meminfo'], output_folder,
+            parse_to_csv("meminfo", ftype_names['meminfo'], output_folder,
                          args.month, args.separate)
         else:
             # Use the file name provided by the user
@@ -143,11 +159,23 @@ def main():
         show_usage = False
         if args.all or args.vmstat is None:
             # The user just input the --meminfo and doesn't have any appends
-            parse_to_csv("vmstat", ftype_name['vmstat'], output_folder,
+            parse_to_csv("vmstat", ftype_names['vmstat'], output_folder,
                          args.month, args.separate)
         else:
             # Use the file name provided by the user
             parse_to_csv("vmstat", args.vmstat, output_folder,
+                         args.month, args.separate)
+
+    # (3). Parse the mpstat.log
+    if hasattr(args, "mpstat") or args.all:
+        show_usage = False
+        if args.all or args.mpstat is None:
+            # The user just input the --meminfo and doesn't have any appends
+            parse_to_csv("mpstat", ftype_names['mpstat'], output_folder,
+                         args.month, args.separate)
+        else:
+            # Use the file name provided by the user
+            parse_to_csv("mpstat", args.mpstat, output_folder,
                          args.month, args.separate)
 
     if show_usage:
