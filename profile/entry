@@ -10,7 +10,7 @@ fi
 [ -r "$EASY_FLAMEGRAPH_DEFAULT" ] && . "$EASY_FLAMEGRAPH_DEFAULT"
 
 if ! $USE_EASY_FLAMEGRAPH; then
-	echo "Not enabled in configuration file: $EASY_FLAMEGRAPH_DEFAULT"
+	debug_log "Not enabled in configuration file: $EASY_FLAMEGRAPH_DEFAULT"
 	exit 0
 fi
 
@@ -18,12 +18,6 @@ fi
 [ -r "$EASY_FLAME_LIB_DIR"/lib ] && . "$EASY_FLAME_LIB_DIR"/lib
 
 mkdir -p "$EASY_FLAME_LOG_DIR"
-
-# make sure only one process is running
-if ! flock -n "$EASY_FLAME_LOCK" echo "Got lock"; then
-	debug_log "Can not get lock, another process is running"
-	exit 1
-fi
 
 # run all scripts in conditions dir
 DATE_SYS=$(date '+%Y.%m.%d-%H.%M.%S')
@@ -47,9 +41,19 @@ fi
 # -t is to tar the intermediate files which is conflicted with the --keep-svg
 # which keeps only the .svg file
 if "$G_KEEP_SVG" && "$G_KEEP_TAR"; then
-	echo "Cannot set G_KEEP_SVG and G_KEEP_TAR together"
+	debug_log "Cannot set G_KEEP_SVG and G_KEEP_TAR together"
 	exit 1
 fi
+
+# make sure only one process is running
+profile_lock() {
+	debug_log $@
+	if ! flock -n "$EASY_FLAME_LOCK" "$@"; then
+		debug_log "Can not get lock, another process is running"
+		debug_log "----------- exit!! -----------"
+		exit 1
+	fi
+}
 
 if "$USE_SYSINFO_PERIODICALLY"; then
 	debug_log "Run scripts in $EASY_FLAME_SYSINFO_DIR"
@@ -65,7 +69,8 @@ debug_log "Run scripts in $EASY_FLAME_COND_DIR"
 for cond_script in $(ls "$EASY_FLAME_COND_DIR"/* "$EASY_FLAME_COND_DIR"/io/io "$EASY_FLAME_COND_DIR"/mem/mem); do
 	if [ -f "$cond_script" ] && [ -x "$cond_script" ]; then
 		debug_log "Script: $(basename "$cond_script")"
-		bash "$cond_script" "$EASY_FLAMEGRAPH_DEFAULT"
+		# Profile lock is only used in the heavy loading activity.
+		profile_lock "$cond_script" "$EASY_FLAMEGRAPH_DEFAULT"
 	fi
 done
 
