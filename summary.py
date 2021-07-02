@@ -71,7 +71,7 @@ def main():
     else:
         input_dir = ez_dir
 
-    mem_stat_dir = os.path.join(input_dir, "sysinfo/mem-stat")
+    mem_stat_dir = input_dir
     if os.path.isdir(mem_stat_dir):
         extra_mem.append("--input-folder")
         extra_mem.append(mem_stat_dir)

@@ -60,6 +60,23 @@ def parse_mpstat_to_csv(filename, outputdir, month, separate):
                     line = fp.readline()
                     continue
                 else:
+                    """In reality, there is a condition that the record is
+                    saved in interleave. The log date is using the latest one.
+                    ---------------------------------------------
+                    ---------------------------------------------
+                    ---------------------------------------------
+                    2021.06.25-08.47.54
+                    2021.06.25-08.47.54
+                    2021.06.25-08.47.54
+                    Average:     CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+                    Average:     all    1.26    0.00    1.01   79.90    0.00    0.00    0.00    0.00    0.00   17.84
+                    """
+                    date_chk = get_date(month, line)
+                    if date_chk is not None:
+                        print("Detect the repeated date: {}!".format(date_chk))
+                        line = fp.readline()
+                        continue
+
                     # Needs to append the date as there are many CPUs
                     meminfo_params["date"] = meminfo_params.get("date", [])
                     meminfo_params["date"].append(date_msg)
@@ -93,7 +110,9 @@ def parse_mpstat_to_csv(filename, outputdir, month, separate):
                 writer.writerows(meminfo_params[key])
         print("The .csv file is separated under: " + os.getcwd())
     else:
-        df_all = pd.DataFrame(meminfo_params)
+        # df_all = pd.DataFrame(meminfo_params)
+        df_all = pd.DataFrame.from_dict(meminfo_params, orient='index')
+        df_all = df_all.transpose()
         df_all.set_index('date', inplace=True)
         csv_output_file = os.path.join(outputdir, filetype + ".csv")
         df_all.to_csv(csv_output_file)

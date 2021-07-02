@@ -30,12 +30,21 @@ def get_value(filetype=None, line=None):
     if filetype is not None:
         m_param = re.search(regexp_arr[filetype], line)
         if m_param:
-            if filetype is "mpstat":
-                param = ["CPU", "%usr", "%nice", "%sys", "%iowait", "%irq",
-                         "%soft", "%steal", "%guest", "%gnice", "%idle"]
+            if filetype == "mpstat":
+                # The original order is:
+                # CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+                # Reorder to make the import indicator to the front for easy to
+                # read.
+                param = ["CPU", "%cpu util", "%usr", "%sys", "%nice",
+                         "%iowait", "%irq", "%soft", "%steal", "%guest",
+                         "%gnice"]
+                reorder_index = [0, 10, 1, 3, 2, 4, 5, 6, 7, 8, 9]
 
                 value = m_param.group().split()
                 value.remove("Average:")
+                # Transfer the %idle to %cpu util
+                value[len(value)-1] = str(100 - float(value[len(value)-1]))
+                value = [value[v] for v in reorder_index]
                 return param, value
 
             param = m_param.expand(r"\1")

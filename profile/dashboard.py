@@ -88,7 +88,7 @@ def init_default_paths():
 def main():
     input_folder, output_folder, csv_source, link_prefix = init_default_paths()
 
-    tab_cpu = cpu_tab()
+    tab_cpu = cpu_tab(input_folder, output_folder, csv_source, link_prefix)
     tab_memory = memory_tab(input_folder, output_folder, csv_source,
                             link_prefix)
     tab_io = io_tab()

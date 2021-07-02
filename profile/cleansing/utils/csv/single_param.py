@@ -91,7 +91,8 @@ def parse_single_param_to_csv(filetype, filename, outputdir, month, separate):
                 writer.writerows(meminfo_params[key])
         print("The .csv file is separated under: " + os.getcwd())
     else:
-        df_all = pd.DataFrame(meminfo_params)
+        df_all = pd.DataFrame.from_dict(meminfo_params, orient='index')
+        df_all = df_all.transpose()
         df_all.set_index('date', inplace=True)
         csv_output_file = os.path.join(outputdir, filetype + ".csv")
         df_all.to_csv(csv_output_file)
