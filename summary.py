@@ -70,6 +70,7 @@ def main():
         input_dir = args.input_folder
     else:
         input_dir = ez_dir
+    input_dir = os.path.abspath(input_dir)
 
     mem_stat_dir = input_dir
     if os.path.isdir(mem_stat_dir):
@@ -86,6 +87,7 @@ def main():
         folder unless assigned it in the command manually
         """
         output_dir = input_dir
+    output_dir = os.path.abspath(output_dir)
 
     if os.path.isdir(output_dir):
         extra_mem.append("--output-folder")

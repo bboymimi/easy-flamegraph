@@ -82,7 +82,9 @@ def init_default_paths():
     """Set up the link prefix"""
     link_prefix = args.link_prefix if hasattr(args, "link_prefix") else ""
 
-    return args.input_folder, args.output_folder, args.csv_source, link_prefix
+    input_folder = os.path.abspath(args.input_folder)
+    output_folder = os.path.abspath(args.output_folder)
+    return input_folder, output_folder, args.csv_source, link_prefix
 
 
 def main():
