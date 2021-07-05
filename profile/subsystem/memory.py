@@ -173,7 +173,7 @@ def plot_meminfo(csv_source, link_prefix, input_folder, link_table={}):
     group_dict["commit"] = ["CommitLimit", "Committed_AS"]
     group_dict["vmalloc"] = ["VmallocTotal", "VmallocUsed", "VmallocChunk"]
     group_dict["HardwareCorrupted"] = ["HardwareCorrupted"]
-    group_dict["THP"] = ["AnonHugePages", "ShmemHugePages", "ShmemPmdMapped"]
+    group_dict["THP"] = ["AnonHugePages"]
     group_dict["persistent hugepage"] = ["HugePages_Total", "HugePages_Free",
                                          "HugePages_Rsvd", "HugePages_Surp",
                                          "Hugepagesize"]
@@ -190,6 +190,11 @@ def plot_meminfo(csv_source, link_prefix, input_folder, link_table={}):
         group_dict["THP"].append("FileHugePages")
         group_dict["THP"].append("FilePmdMapped")
         group_dict["persistent hugepage"].append("Hugetlb")
+
+    if version.parse(linux_version) >= version.parse("4.15"):
+        # 65c453778aea mm, rmap: account shmem thp pages v4.8-rc1~147^2~19
+        group_dict["THP"].append("ShmemHugePages")
+        group_dict["THP"].append("ShmemPmdMapped")
 
     pre = PreText(text=meminfo_pretext, width=500, height=20)
     plot_list.append(pre)
@@ -233,11 +238,7 @@ def plot_vmstat(csv_source, link_prefix, input_folder, link_table={}):
 
     rand_parameter_colors = []
 
-    group_dict["VMSTAT LRU list"] = ["nr_free_pages", "nr_zone_inactive_anon",
-                                     "nr_zone_active_anon",
-                                     "nr_zone_inactive_file",
-                                     "nr_zone_active_file",
-                                     "nr_zone_unevictable",
+    group_dict["VMSTAT LRU list"] = ["nr_free_pages",
                                      "nr_file_pages",
                                      "nr_anon_pages",
                                      "nr_inactive_anon",
@@ -249,10 +250,7 @@ def plot_vmstat(csv_source, link_prefix, input_folder, link_table={}):
                                      "nr_slab_reclaimable",
                                      "nr_slab_unreclaimable"]
 
-    group_dict["VMSTAT pgsteal, pgscan"] = ["pgsteal_kswapd", "pgsteal_direct",
-                                            "pgrefill", "pgscan_kswapd",
-                                            "pgscan_direct",
-                                            "pgscan_direct_throttle",
+    group_dict["VMSTAT pgsteal, pgscan"] = ["pgscan_direct_throttle",
                                             "pginodesteal", "slabs_scanned",
                                             "kswapd_inodesteal"]
 
@@ -261,9 +259,7 @@ def plot_vmstat(csv_source, link_prefix, input_folder, link_table={}):
                                      "compact_isolated"]
 
     group_dict["VMSTAT compact2"] = ["compact_stall", "compact_fail",
-                                     "compact_success", "compact_daemon_wake",
-                                     "compact_daemon_migrate_scanned",
-                                     "compact_daemon_free_scanned"]
+                                     "compact_success"]
 
     group_dict["VMSTAT high/low watermark"] = ["kswapd_low_wmark_hit_quickly",
                                                "kswapd_high_wmark_hit_quickly"]
@@ -280,14 +276,10 @@ def plot_vmstat(csv_source, link_prefix, input_folder, link_table={}):
                                        "workingset_nodereclaim"]
 
     group_dict["VMSTAT pgalloc/pgfree"] = ["pgalloc_dma", "pgalloc_dma32",
-                                           "pgalloc_normal",
-                                           "allocstall_movable", "pgfree"]
-
-    group_dict["VMSTAT allocstall"] = ["allocstall_dma", "allocstall_dma32",
-                                       "allocstall_normal", "pgalloc_movable"]
+                                           "pgalloc_normal", "pgfree"]
 
     group_dict["VMSTAT drop{cache,slab} oomkill"] = ["drop_pagecache",
-                                                     "drop_slab", "oom_kill"]
+                                                     "drop_slab"]
 
     group_dict["VMSTAT {swap,pg}{in,out}"] = ["pgpgin", "pgpgout", "pswpin",
                                               "pswpout", "pageoutrun"]
@@ -304,33 +296,16 @@ def plot_vmstat(csv_source, link_prefix, input_folder, link_table={}):
 
     group_dict["VMSTAT nr_misc1"] = ["nr_isolated_anon", "nr_isolated_file",
                                      "nr_writeback", "nr_writeback_temp",
-                                     "nr_shmem", "nr_shmem_hugepages",
-                                     "nr_shmem_pmdmapped",
+                                     "nr_shmem",
                                      "nr_anon_transparent_hugepages",
                                      "nr_unstable"]
 
     group_dict["VMSTAT nr_misc2"] = ["nr_mlock", "nr_page_table_pages",
-                                     "nr_kernel_stack", "nr_bounce",
-                                     "nr_zspages", "pglazyfree", "pglazyfreed"]
+                                     "nr_kernel_stack", "nr_bounce"]
 
     group_dict["VMSTAT nr_misc3"] = ["pgactivate", "pgdeactivate", "pgfault",
                                      "pgmajfault", "pgrotated",
                                      "pgmigrate_success", "pgmigrate_fail"]
-
-    group_dict["VMSTAT pgskip"] = ["pgskip_dma", "pgskip_dma32",
-                                   "pgskip_normal", "pgskip_movable"]
-
-    group_dict["VMSTAT thp"] = ["thp_fault_alloc", "thp_fault_fallback",
-                                "thp_collapse_alloc",
-                                "thp_collapse_alloc_failed", "thp_file_alloc",
-                                "thp_file_mapped", "thp_split_page",
-                                "thp_split_page_failed",
-                                "thp_deferred_split_page", "thp_split_pmd",
-                                "thp_split_pud", "thp_zero_page_alloc",
-                                "thp_zero_page_alloc_failed", "thp_swpout",
-                                "thp_swpout_fallback"]
-
-    group_dict["VMSTAT swap_{ra,ra_hit}"] = ["swap_ra", "swap_ra_hit"]
 
     group_dict["VMSTAT balloon"] = ["balloon_inflate", "balloon_deflate",
                                     "balloon_migrate"]
@@ -351,11 +326,48 @@ def plot_vmstat(csv_source, link_prefix, input_folder, link_table={}):
     P = re.compile(r"Linux version (\d+\.\d+)")
     linux_version = P.search(str(export_output)).expand(r"\1")
     if version.parse(linux_version) >= version.parse("5.4"):
-        group_dict["VMSTAT LRU list"].append("nr_kernel_misc_reclaimable")
-        group_dict["VMSTAT workingset"].append("workingset_restore")
+        group_dict["VMSTAT LRU list"].extend(["nr_kernel_misc_reclaimable",
+                                              "workingset_restore"])
         group_dict["VMSTAT workingset"].append("workingset_nodes")
-        group_dict["VMSTAT nr_misc1"].append("nr_file_hugepages")
-        group_dict["VMSTAT nr_misc1"].append("nr_file_pmdmapped")
+        group_dict["VMSTAT nr_misc1"].extend(["nr_file_hugepages",
+                                              "nr_file_pmdmapped"])
+    if version.parse(linux_version) >= version.parse("4.15"):
+        # v4.8-rc1~116^2~43 71c799f4982d mm: add per-zone lru list stat
+        group_dict["VMSTAT LRU list"].extend(["nr_zone_inactive_anon",
+                                              "nr_zone_active_anon",
+                                              "nr_zone_inactive_file",
+                                              "nr_zone_active_file",
+                                              "nr_zone_unevictable"])
+        group_dict["VMSTAT pgsteal, pgscan"].extend(["pgsteal_kswapd",
+                                                     "pgsteal_direct",
+                                                     "pgrefill",
+                                                     "pgscan_kswapd",
+                                                     "pgscan_direct"])
+        group_dict["VMSTAT compact2"].extend(["compact_daemon_wake",
+                                              "compact_daemon_migrate_scanned",
+                                              "compact_daemon_free_scanned"])
+        group_dict["VMSTAT pgalloc/pgfree"].append("allocstall_movable")
+        group_dict["VMSTAT allocstall"] = ["allocstall_dma",
+                                           "allocstall_dma32",
+                                           "allocstall_normal",
+                                           "pgalloc_movable"]
+        group_dict["VMSTAT drop{cache,slab} oomkill"].append("oom_kill")
+        group_dict["VMSTAT nr_misc1"].extend(["nr_shmem_hugepages",
+                                              "nr_shmem_pmdmapped"])
+        group_dict["VMSTAT nr_misc2"].extend(["nr_zspages", "pglazyfree",
+                                              "pglazyfreed"])
+        group_dict["VMSTAT pgskip"] = ["pgskip_dma", "pgskip_dma32",
+                                       "pgskip_normal", "pgskip_movable"]
+        group_dict["VMSTAT thp"] = ["thp_file_alloc", "thp_file_mapped",
+                                    "thp_split_page", "thp_split_page_failed",
+                                    "thp_deferred_split_page", "thp_split_pmd",
+                                    "thp_split_pud", "thp_zero_page_alloc",
+                                    "thp_zero_page_alloc_failed", "thp_swpout",
+                                    "thp_swpout_fallback"]
+        group_dict["VMSTAT swap_{ra,ra_hit}"] = ["swap_ra", "swap_ra_hit"]
+    else:
+        group_dict["VMSTAT allocstall"] = ["allocstall"]
+        group_dict["VMSTAT thp"] = ["thp_split"]
 
     pre = PreText(text=vmstat_pretext, width=500, height=20)
     plot_list.append(pre)
