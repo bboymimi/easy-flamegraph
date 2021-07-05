@@ -5,10 +5,13 @@ from bokeh.layouts import column, layout
 from bokeh.plotting import ColumnDataSource, figure
 from bokeh.palettes import magma
 from bokeh.models import HoverTool, OpenURL, Panel, PreText, RangeTool, TapTool
+from packaging import version
 import numpy as np
 import os
 import pandas as pd
 import random
+import re
+import subprocess
 
 
 def build_link(default_directory="/var/log/easy-flamegraph"):
@@ -143,7 +146,7 @@ def plot_meminfo_group(df_meminfo, group_list, color_dict, key, link_prefix,
     return select, p
 
 
-def plot_meminfo(csv_source, link_prefix, link_table={}):
+def plot_meminfo(csv_source, link_prefix, input_folder, link_table={}):
     group_dict = {}
     plot_list = []
     meminfo_path = ""
@@ -156,7 +159,7 @@ def plot_meminfo(csv_source, link_prefix, link_table={}):
                               "Inactive(file)"]
     group_dict["Mem Basic Counters"] = ["MemAvailable", "MemFree", "SwapFree",
                                         "Buffers", "Cached"]
-    group_dict["Slab"] = ["Slab", "SReclaimable", "SUnreclaim", "KReclaimable"]
+    group_dict["Slab"] = ["Slab", "SReclaimable", "SUnreclaim"]
     group_dict["Combined"] = ["MemAvailable", "MemFree", "SwapFree", "Buffers",
                               "Cached", "Active", "Inactive", "Active(anon)",
                               "Active(file)", "Inactive(anon)",
@@ -166,17 +169,27 @@ def plot_meminfo(csv_source, link_prefix, link_table={}):
     group_dict["User"] = ["AnonPages", "Mapped", "Mlocked", "Shmem"]
     group_dict["MISC type"] = ["Dirty", "Writeback"]
     group_dict["kernel type"] = ["KernelStack", "PageTables", "NFS_Unstable",
-                                 "Bounce", "WritebackTmp", "Percpu"]
+                                 "Bounce", "WritebackTmp"]
     group_dict["commit"] = ["CommitLimit", "Committed_AS"]
     group_dict["vmalloc"] = ["VmallocTotal", "VmallocUsed", "VmallocChunk"]
     group_dict["HardwareCorrupted"] = ["HardwareCorrupted"]
-    group_dict["THP"] = ["AnonHugePages", "ShmemHugePages", "ShmemPmdMapped",
-                         "FileHugePages", "FilePmdMapped"]
+    group_dict["THP"] = ["AnonHugePages", "ShmemHugePages", "ShmemPmdMapped"]
     group_dict["persistent hugepage"] = ["HugePages_Total", "HugePages_Free",
                                          "HugePages_Rsvd", "HugePages_Surp",
-                                         "Hugepagesize", "Hugetlb"]
+                                         "Hugepagesize"]
     group_dict["DirectMap"] = ["DirectMap4k", "DirectMap2M", "DirectMap1G"]
     group_dict["cma"] = ["CmaTotal", "CmaFree"]
+
+    linux_version = os.path.join(input_folder, "version")
+    export_output = subprocess.check_output(["cat", linux_version])
+    P = re.compile(r"Linux version (\d+\.\d+)")
+    linux_version = P.search(str(export_output)).expand(r"\1")
+    if version.parse(linux_version) >= version.parse("5.4"):
+        group_dict["Slab"].append("KReclaimable")
+        group_dict["kernel type"].append("Percpu")
+        group_dict["THP"].append("FileHugePages")
+        group_dict["THP"].append("FilePmdMapped")
+        group_dict["persistent hugepage"].append("Hugetlb")
 
     pre = PreText(text=meminfo_pretext, width=500, height=20)
     plot_list.append(pre)
@@ -212,7 +225,7 @@ def plot_meminfo(csv_source, link_prefix, link_table={}):
     return plot_list
 
 
-def plot_vmstat(csv_source, link_prefix, link_table):
+def plot_vmstat(csv_source, link_prefix, input_folder, link_table={}):
     group_dict = {}
     plot_list = []
     vmstat_path = ""
@@ -234,8 +247,7 @@ def plot_vmstat(csv_source, link_prefix, link_table):
                                      "nr_unevictable",
                                      "nr_free_cma",
                                      "nr_slab_reclaimable",
-                                     "nr_slab_unreclaimable",
-                                     "nr_kernel_misc_reclaimable"]
+                                     "nr_slab_unreclaimable"]
 
     group_dict["VMSTAT pgsteal, pgscan"] = ["pgsteal_kswapd", "pgsteal_direct",
                                             "pgrefill", "pgscan_kswapd",
@@ -263,10 +275,8 @@ def plot_vmstat(csv_source, link_prefix, link_table):
                                  "numa_pages_migrated", "pgmigrate_success",
                                  "pgmigrate_fail"]
 
-    group_dict["VMSTAT workingset"] = ["workingset_nodes",
-                                       "workingset_refault",
+    group_dict["VMSTAT workingset"] = ["workingset_refault",
                                        "workingset_activate",
-                                       "workingset_restore",
                                        "workingset_nodereclaim"]
 
     group_dict["VMSTAT pgalloc/pgfree"] = ["pgalloc_dma", "pgalloc_dma32",
@@ -295,8 +305,7 @@ def plot_vmstat(csv_source, link_prefix, link_table):
     group_dict["VMSTAT nr_misc1"] = ["nr_isolated_anon", "nr_isolated_file",
                                      "nr_writeback", "nr_writeback_temp",
                                      "nr_shmem", "nr_shmem_hugepages",
-                                     "nr_shmem_pmdmapped", "nr_file_hugepages",
-                                     "nr_file_pmdmapped",
+                                     "nr_shmem_pmdmapped",
                                      "nr_anon_transparent_hugepages",
                                      "nr_unstable"]
 
@@ -336,6 +345,17 @@ def plot_vmstat(csv_source, link_prefix, link_table):
 
     group_dict["VMSTAT htlb"] = ["htlb_buddy_alloc_success",
                                  "htlb_buddy_alloc_fail"]
+
+    linux_version = os.path.join(input_folder, "version")
+    export_output = subprocess.check_output(["cat", linux_version])
+    P = re.compile(r"Linux version (\d+\.\d+)")
+    linux_version = P.search(str(export_output)).expand(r"\1")
+    if version.parse(linux_version) >= version.parse("5.4"):
+        group_dict["VMSTAT LRU list"].append("nr_kernel_misc_reclaimable")
+        group_dict["VMSTAT workingset"].append("workingset_restore")
+        group_dict["VMSTAT workingset"].append("workingset_nodes")
+        group_dict["VMSTAT nr_misc1"].append("nr_file_hugepages")
+        group_dict["VMSTAT nr_misc1"].append("nr_file_pmdmapped")
 
     pre = PreText(text=vmstat_pretext, width=500, height=20)
     plot_list.append(pre)
@@ -379,8 +399,8 @@ def memory_tab(input_folder, output_folder, csv_source, link_prefix):
 
     l_mem = layout(
         [
-            [plot_meminfo(csv_source, link_prefix, link_table),
-             plot_vmstat(csv_source, link_prefix, link_table)],
+            [plot_meminfo(csv_source, link_prefix, input_folder, link_table),
+             plot_vmstat(csv_source, link_prefix, input_folder, link_table)],
         ],
         sizing_mode='scale_both'
     )

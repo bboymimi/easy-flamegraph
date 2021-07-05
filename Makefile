@@ -41,6 +41,7 @@ install:
 
 	git submodule update --init FlameGraph
 	$(CP) -r ./FlameGraph/ $(DESTDIR)$(EZ_LIB_DIR)
+	$(CP) /proc/version $(DESTDIR)$(EZ_LOG_DIR)
 
 uninstall:
 	rm -rf $(DESTDIR)$(EZ_LIB_DIR)/FlameGraph/
