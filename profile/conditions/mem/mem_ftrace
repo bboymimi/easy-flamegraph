@@ -103,17 +103,22 @@ echo 'p:kmem__alloc_pages_nodemask __alloc_pages_nodemask request=%di' >> /sys/k
 debug_log "Insert kmem:mm_page_alloc trace event!"
 echo 'kmem:mm_page_alloc' >> /sys/kernel/debug/tracing/set_event
 
+# check if the symbol address/offset need to be included or not
+if $G_SYMBOL_STACK; then
 
-if ! grep -q "sym\-addr" /sys/kernel/debug/tracing/trace_options; then
-	debug_log "set restore_nosym-addr"
-	restore_sym_addr=true
-	echo "sym-addr" > /sys/kernel/debug/tracing/trace_options
-fi
+	# if sym-addr cannot be found, by default it's nosym-addr
+	if ! grep -q "^sym\-addr" /sys/kernel/debug/tracing/trace_options; then
+		debug_log "set restore_nosym-addr"
+		restore_sym_addr=true
+		echo "sym-addr" > /sys/kernel/debug/tracing/trace_options
+	fi
 
-if ! grep -q "sym\-offset" /sys/kernel/debug/tracing/trace_options; then
-	debug_log "set restore_nosym-offset"
-	restore_sym_offset=true
-	echo "sym-offset" > /sys/kernel/debug/tracing/trace_options
+	# if sym-offset cannot be found, by default it's nosym-offset
+	if ! grep -q "^sym\-offset" /sys/kernel/debug/tracing/trace_options; then
+		debug_log "set restore_nosym-offset"
+		restore_sym_offset=true
+		echo "sym-offset" > /sys/kernel/debug/tracing/trace_options
+	fi
 fi
 
 echo stacktrace > /sys/kernel/debug/tracing/events/kmem/mm_page_alloc/trigger
@@ -162,14 +167,17 @@ echo '!kmem:mm_page_alloc' >> /sys/kernel/debug/tracing/set_event
 echo '!stacktrace' > /sys/kernel/debug/tracing/events/kmem/mm_page_alloc/trigger
 echo '-:kmem__alloc_pages_nodemask' >> /sys/kernel/debug/tracing/kprobe_events
 
-if $restore_sym_offset; then
-	debug_log "restore nosym-offset"
-	echo nosym-offset > /sys/kernel/debug/tracing/trace_options
-fi
+# check if the symbol address/offset need to be restore or not
+if $G_SYMBOL_STACK; then
+	if $restore_sym_offset; then
+		debug_log "restore nosym-offset"
+		echo nosym-offset > /sys/kernel/debug/tracing/trace_options
+	fi
 
-if $restore_sym_addr; then
-	debug_log "restore nosym-addr"
-	echo nosym-addr > /sys/kernel/debug/tracing/trace_options
+	if $restore_sym_addr; then
+		debug_log "restore nosym-addr"
+		echo nosym-addr > /sys/kernel/debug/tracing/trace_options
+	fi
 fi
 
 debug_log "Clear the trace buffer!"
