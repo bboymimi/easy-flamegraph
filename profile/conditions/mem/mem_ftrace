@@ -125,6 +125,10 @@ echo stacktrace > /sys/kernel/debug/tracing/events/kmem/mm_page_alloc/trigger
 echo 1 > /sys/kernel/debug/tracing/events/kprobes/kmem__alloc_pages_nodemask/enable
 
 debug_log "start the tracing"
+
+# capture the mem info *BEFORE* the ftrace profiling
+"$EASY_FLAME_SYSINFO_DIR"/mem-stat "$EASY_FLAMEGRAPH_DEFAULT"
+
 echo 1 > /sys/kernel/debug/tracing/tracing_on
 
 debug_log "sleep 5 seconds"
@@ -135,6 +139,9 @@ sleep 5
 echo "done."
 debug_log "stop the tracing"
 echo 0 > /sys/kernel/debug/tracing/tracing_on
+
+# capture the mem info *AFTER* the ftrace profiling
+"$EASY_FLAME_SYSINFO_DIR"/mem-stat "$EASY_FLAMEGRAPH_DEFAULT"
 
 echo 0 > /sys/kernel/debug/tracing/events/kprobes/kmem__alloc_pages_nodemask/enable
 

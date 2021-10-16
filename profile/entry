@@ -58,6 +58,10 @@ profile_lock() {
 if "$USE_SYSINFO_PERIODICALLY"; then
 	debug_log "Run scripts in $EASY_FLAME_SYSINFO_DIR"
 	for sysinfo_script in "$EASY_FLAME_SYSINFO_DIR"/*; do
+		if [[ "$sysinfo_script" =~ "mem" ]] && "$USE_MEM"; then
+			debug_log "Skip the mem-stat: \$USE_MEM=true"
+			continue
+		fi
 		if [ -f "$sysinfo_script" ] && [ -x "$sysinfo_script" ]; then
 			debug_log "Script: $(basename "$sysinfo_script")"
 			bash "$sysinfo_script" "$EASY_FLAMEGRAPH_DEFAULT"
