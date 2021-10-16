@@ -1,12 +1,23 @@
 #!/bin/bash
 
-# Config file
+path_mem_ftrace="$(realpath $0)/"
+dirname_mem_ftrace="$(dirname $path_mem_ftrace)"
+dirname_config="${dirname_mem_ftrace%conditions*}"
+EASY_FLAMEGRAPH_DEFAULT="${dirname_config}easy-flamegraph.conf"
+
+! [ -r "$EASY_FLAMEGRAPH_DEFAULT" ] && EASY_FLAMEGRAPH_DEFAULT="/etc/default/easy-flamegraph.conf"
+
+# Overwrite the default config
 if [ -n "$1" ] && [ -r "$1" ]; then
 	EASY_FLAMEGRAPH_DEFAULT="$1"
 else
-	echo "Unable to read config file $1"
-	exit 1
+	if ! [ -r "$EASY_FLAMEGRAPH_DEFAULT" ]; then
+		echo "Unable to read config file $1"
+		exit 1
+	fi
 fi
+
+echo "Use $EASY_FLAMEGRAPH_DEFAULT as the config file"
 
 [ -r "$EASY_FLAMEGRAPH_DEFAULT" ] && . "$EASY_FLAMEGRAPH_DEFAULT"
 
@@ -45,9 +56,10 @@ prepare_to_gen_flamegraph() {
 	debug_log "-o "$output_dir" --title $title --subtitle $subtitle "
 	debug_log "-p "$per_cpu_flame" "$type" --mem-flame '>>' "$EASY_FLAME_LOG""
 
+	# Redirect the output message to both console and easy-flamegraph log file
 	"$EASY_FLAME_LIB_DIR"/gen-flamegraph.sh -i "$data_path" "$KEEP_SVG_OPTION" \
 		-o "$output_dir" --title "$title" --subtitle "$subtitle" \
-		-p "$per_cpu_flame" "$type" --mem-flame >> "$EASY_FLAME_LOG" 2>&1
+		-p "$per_cpu_flame" "$type" --mem-flame 2>&1 | tee -a "$EASY_FLAME_LOG"
 }
 
 restore_sym_addr=false
@@ -111,8 +123,11 @@ debug_log "start the tracing"
 echo 1 > /sys/kernel/debug/tracing/tracing_on
 
 debug_log "sleep 5 seconds"
+echo "The memory allocation sampling will profile 5s....."
+
 sleep 5
 
+echo "done."
 debug_log "stop the tracing"
 echo 0 > /sys/kernel/debug/tracing/tracing_on
 
