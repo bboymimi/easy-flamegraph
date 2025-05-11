@@ -77,7 +77,7 @@ data_path="${output_dir}/${DATE}.mem.${ext}"
 debug_log "USE_MEM_FTRACE: enabled"
 
 debug_log "set nop as the default tracer"
-echo function_graph > /sys/kernel/debug/tracing/current_tracer
+echo nop > /sys/kernel/debug/tracing/current_tracer
 # echo function_graph > /sys/kernel/debug/tracing/current_tracer
 
 debug_log "Clear the filter!"
@@ -85,20 +85,19 @@ echo > /sys/kernel/debug/tracing/set_ftrace_filter
 
 debug_log "Clear the set_graph_function"
 #echo __alloc_pages_nodemask > /sys/kernel/debug/tracing/set_graph_function
-echo __alloc_pages_nodemask > /sys/kernel/debug/tracing/set_ftrace_filter
+echo __alloc_pages_noprof > /sys/kernel/debug/tracing/set_ftrace_filter
 
 debug_log "Clear the trace buffer!"
 echo > /sys/kernel/debug/tracing/trace
 
-debug_log "Insert kmem__alloc_pages_nodemask trace point!"
-if grep -q kmem__alloc_pages_nodemask /sys/kernel/debug/tracing/kprobe_events; then
+if grep -q mm_page_alloc /sys/kernel/debug/tracing/kprobe_events; then
 	# debug_log "Remove the the existing blk_mq_start_request trace event!"
-	echo "Remove the the existing kmem__alloc_pages_nodemask trace event!"
-	echo '-:kmem__alloc_pages_nodemask' >> /sys/kernel/debug/tracing/kprobe_events
+	echo "Remove the the existing kmem__alloc_pages trace event!"
+	echo '-:kmem__alloc_pages' >> /sys/kernel/debug/tracing/kprobe_events
 fi
 
-debug_log "Insert again kmem__alloc_pages_nodemask trace event!"
-echo 'p:kmem__alloc_pages_nodemask __alloc_pages_nodemask request=%di' >> /sys/kernel/debug/tracing/kprobe_events
+debug_log "Insert again kmem__alloc_pages trace event!"
+echo 'p:kmem__alloc_pages __alloc_pages_noprof request=%di' >> /sys/kernel/debug/tracing/kprobe_events
 
 debug_log "Insert kmem:mm_page_alloc trace event!"
 echo 'kmem:mm_page_alloc' >> /sys/kernel/debug/tracing/set_event
@@ -122,7 +121,7 @@ if $G_SYMBOL_STACK; then
 fi
 
 echo stacktrace > /sys/kernel/debug/tracing/events/kmem/mm_page_alloc/trigger
-echo 1 > /sys/kernel/debug/tracing/events/kprobes/kmem__alloc_pages_nodemask/enable
+echo 1 > /sys/kernel/debug/tracing/events/kprobes/kmem__alloc_pages/enable
 
 debug_log "start the tracing"
 
@@ -143,7 +142,7 @@ echo 0 > /sys/kernel/debug/tracing/tracing_on
 # capture the mem info *AFTER* the ftrace profiling
 "$EASY_FLAME_SYSINFO_DIR"/mem-stat "$EASY_FLAMEGRAPH_DEFAULT"
 
-echo 0 > /sys/kernel/debug/tracing/events/kprobes/kmem__alloc_pages_nodemask/enable
+echo 0 > /sys/kernel/debug/tracing/events/kprobes/kmem__alloc_pages/enable
 
 debug_log "cat the trace result to $data_path"
 # generate the trace log by cpu order instead of cating the default trace file
@@ -172,7 +171,7 @@ prepare_to_gen_flamegraph
 echo '!kmem:mm_page_alloc' >> /sys/kernel/debug/tracing/set_event
 
 echo '!stacktrace' > /sys/kernel/debug/tracing/events/kmem/mm_page_alloc/trigger
-echo '-:kmem__alloc_pages_nodemask' >> /sys/kernel/debug/tracing/kprobe_events
+echo '-:kmem__alloc_pages' >> /sys/kernel/debug/tracing/kprobe_events
 
 # check if the symbol address/offset need to be restore or not
 if $G_SYMBOL_STACK; then
